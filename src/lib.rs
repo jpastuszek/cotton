@@ -13,7 +13,7 @@ pub mod prelude {
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingArgs {
-        /// Verbose mode (-v for Debug, -vv for Trace)
+        /// Verbose mode (-v for Debug, -vv for Trace, -vvv Trace all modules)
         #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
         pub verbose: u8,
     }
@@ -24,19 +24,25 @@ pub mod prelude {
         buffer
     }
 
-    pub fn init_logger(args: &LoggingArgs, module_path_filter: impl Into<String>) {
+    pub fn init_logger(args: &LoggingArgs, module_path: impl Into<String>) {
         use log::Level;
         use loggerv::{Logger, Output};
 
-        Logger::new()
+        let mut logger = Logger::new()
             .base_level(Level::Info)
             .verbosity(args.verbose as u64)
             .output(&Level::Info, Output::Stderr)
             .output(&Level::Debug, Output::Stderr)
             .output(&Level::Trace, Output::Stderr)
-            .module_path(true)
-            .add_module_path_filter(module_path_filter)
-            .level(true)
+            .module_path(true);
+
+        if args.verbose <= 2 {
+            logger = logger
+                .add_module_path_filter(module_path)
+                .add_module_path_filter("problem");
+        }
+
+        logger.level(true)
             .init()
             .or_failed_to("init logger");
 
