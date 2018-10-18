@@ -16,6 +16,10 @@ pub mod prelude {
         /// Verbose mode (-v for Debug, -vv for Trace, -vvv Trace all modules)
         #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
         pub verbose: u8,
+
+        /// Force colorizing the logger output
+        #[structopt(long = "force-colors")]
+        pub force_colors: bool,
     }
 
     pub fn read_stdin() -> String {
@@ -34,12 +38,17 @@ pub mod prelude {
             .output(&Level::Info, Output::Stderr)
             .output(&Level::Debug, Output::Stderr)
             .output(&Level::Trace, Output::Stderr)
-            .module_path(true);
+            .module_path(false);
 
         if args.verbose <= 2 {
             logger = logger
                 .add_module_path_filter(module_path)
                 .add_module_path_filter("problem");
+        }
+
+        if args.force_colors {
+            logger = logger
+                .force_colors()
         }
 
         logger.level(true)
