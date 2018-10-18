@@ -34,7 +34,8 @@ pub mod prelude {
             .output(&Level::Info, Output::Stderr)
             .output(&Level::Debug, Output::Stderr)
             .output(&Level::Trace, Output::Stderr)
-            .module_path(false)
+            .module_path(true)
+            .add_module_path_filter(module_path!())
             .level(true)
             .init()
             .or_failed_to("init logger");

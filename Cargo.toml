@@ -7,4 +7,4 @@ authors = ["Jakub Pastuszek <jpastuszek@gmail.com>"]
 problem = "0.1.0"
 structopt = "0.2.12"
 log = "0.4.5"
-loggerv = "0.7.1"
+loggerv = { git = "https://github.com/jpastuszek/loggerv.git" }
