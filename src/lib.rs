@@ -24,7 +24,7 @@ pub mod prelude {
         buffer
     }
 
-    pub fn init_logger(args: &LoggingArgs) {
+    pub fn init_logger(args: &LoggingArgs, module_path_filter: impl Into<String>) {
         use log::Level;
         use loggerv::{Logger, Output};
 
@@ -35,7 +35,7 @@ pub mod prelude {
             .output(&Level::Debug, Output::Stderr)
             .output(&Level::Trace, Output::Stderr)
             .module_path(true)
-            .add_module_path_filter(module_path!())
+            .add_module_path_filter(module_path_filter)
             .level(true)
             .init()
             .or_failed_to("init logger");
