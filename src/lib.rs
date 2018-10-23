@@ -2,6 +2,7 @@ extern crate problem;
 #[macro_use]
 extern crate structopt;
 
+#[macro_use]
 pub extern crate log;
 extern crate loggerv;
 
@@ -10,9 +11,10 @@ pub mod prelude {
     pub use std::fs::File;
     pub use problem::*;
     pub use structopt::StructOpt;
+    pub use std::fmt::{self, Display, Debug};
 
     #[derive(Debug, StructOpt)]
-    pub struct LoggingArgs {
+    pub struct LoggingOpt {
         /// Verbose mode (-v for Debug, -vv for Trace, -vvv Trace all modules)
         #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
         pub verbose: u8,
@@ -22,13 +24,31 @@ pub mod prelude {
         pub force_colors: bool,
     }
 
+    #[derive(Debug, StructOpt)]
+    pub struct DryRunOpt {
+        /// Just print what would have been done
+        #[structopt(long = "dry-run",short = "-d")]
+        pub enabled: bool,
+    }
+
+    impl DryRunOpt {
+        pub fn run(&self, msg: impl Display, run: impl FnOnce() -> ()) -> () {
+            if self.enabled {
+                info!("[dry run]: {}", msg);
+            }  else {
+                info!("{}", msg);
+                run()
+            }
+        }
+    }
+
     pub fn read_stdin() -> String {
         let mut buffer = String::new();
         stdin().read_to_string(&mut buffer).or_failed_to("read UTF-8 string from stdin");
         buffer
     }
 
-    pub fn init_logger(args: &LoggingArgs, module_path: impl Into<String>) {
+    pub fn init_logger(args: &LoggingOpt, module_path: impl Into<String>) {
         use log::Level;
         use loggerv::{Logger, Output};
 
