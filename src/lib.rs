@@ -48,7 +48,7 @@ pub mod prelude {
         buffer
     }
 
-    pub fn init_logger(args: &LoggingOpt, module_path: impl Into<String>) {
+    pub fn init_logger(args: &LoggingOpt, module_paths: impl IntoIterator<Item = impl Into<String>>) {
         use log::Level;
         use loggerv::{Logger, Output};
 
@@ -62,8 +62,12 @@ pub mod prelude {
 
         if args.verbose <= 2 {
             logger = logger
-                .add_module_path_filter(module_path)
+                .add_module_path_filter("cotton")
                 .add_module_path_filter("problem");
+            
+            logger = module_paths.into_iter().fold(logger, |logger, module_path| 
+                logger.add_module_path_filter(module_path)
+            );
         }
 
         if args.force_colors {
