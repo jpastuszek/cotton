@@ -1,10 +1,11 @@
 [package]
 name = "cotton"
 version = "0.1.0"
-authors = ["Jakub Pastuszek <jpastuszek@gmail.com>"]
+authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
+edition = "2018"
 
 [dependencies]
-problem = "0.1.0"
+problem = "1.0.0"
 structopt = "0.2.12"
 log = "0.4.5"
 loggerv = { git = "https://github.com/jpastuszek/loggerv.git" }

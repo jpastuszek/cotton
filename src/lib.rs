@@ -1,17 +1,10 @@
-extern crate problem;
-#[macro_use]
-extern crate structopt;
-
-#[macro_use]
-pub extern crate log;
-extern crate loggerv;
-
 pub mod prelude {
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
     pub use std::fs::File;
-    pub use problem::*;
+    pub use problem::prelude::*;
     pub use structopt::StructOpt;
     pub use std::fmt::{self, Display, Debug};
+    pub use log::{self, trace, debug, info, warn, error, log_enabled}; 
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
@@ -80,13 +73,5 @@ pub mod prelude {
             .or_failed_to("init logger");
 
         ::problem::format_panic_to_error_log();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
     }
 }
