@@ -9,3 +9,5 @@ problem = "1.0.0"
 structopt = "0.2.12"
 log = "0.4.5"
 loggerv = { git = "https://github.com/jpastuszek/loggerv.git" }
+boolinator = "2.4.0"
+itertools = "0.8.0"

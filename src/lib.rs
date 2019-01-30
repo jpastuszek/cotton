@@ -5,6 +5,8 @@ pub mod prelude {
     pub use structopt::StructOpt;
     pub use std::fmt::{self, Display, Debug};
     pub use log::{self, trace, debug, info, warn, error, log_enabled}; 
+    pub use boolinator::Boolinator;
+    pub use itertools::*;
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
