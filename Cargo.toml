@@ -11,3 +11,4 @@ log = "0.4.5"
 loggerv = { git = "https://github.com/jpastuszek/loggerv.git" }
 boolinator = "2.4.0"
 itertools = "0.8.0"
+tap = "0.3.1"

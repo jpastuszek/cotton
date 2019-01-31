@@ -7,6 +7,7 @@ pub mod prelude {
     pub use log::{self, trace, debug, info, warn, error, log_enabled}; 
     pub use boolinator::Boolinator;
     pub use itertools::*;
+    pub use tap::*;
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
