@@ -1,3 +1,4 @@
+pub mod loggerv;
 pub mod prelude {
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
     pub use std::fs::File;
@@ -8,6 +9,7 @@ pub mod prelude {
     pub use boolinator::Boolinator;
     pub use itertools::*;
     pub use tap::*;
+    pub use crate::loggerv;
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {

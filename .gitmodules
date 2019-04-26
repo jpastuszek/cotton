@@ -1,3 +1,0 @@
-[submodule "vendor/loggerv"]
-	path = vendor/loggerv
-	url = https://github.com/jpastuszek/loggerv.git
