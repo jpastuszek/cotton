@@ -14,7 +14,7 @@ license = "MIT"
 problem = "5.0.0"
 structopt = "0.2.12"
 log = "0.4.5"
-loggerv = { git = "https://github.com/jpastuszek/loggerv.git" }
+loggerv = { version = "0.7.1", path = "../loggerv" }
 boolinator = "2.4.0"
 itertools = "0.8.0"
 tap = "0.3.1"
