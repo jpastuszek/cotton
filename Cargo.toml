@@ -1,8 +1,14 @@
 [package]
 name = "cotton"
-version = "0.1.0"
+version = "0.0.0"
 authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
+description = "A prelude with crates, types and functions useful for writing CLI tools."
+repository = "https://github.com/jpastuszek/cotton"
+readme = "README.md"
+keywords = ["cli", "prelude"]
+categories = ["command-line-interface"]
+license = "MIT"
 
 [dependencies]
 problem = "5.0.0"
