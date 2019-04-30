@@ -70,7 +70,7 @@ pub mod prelude {
             .output(&Level::Trace, Output::Stderr)
             .module_path(false);
 
-        if args.verbose <= 3 {
+        if verbose <= 3 {
             logger = logger
                 .add_module_path_filter("cotton")
                 .add_module_path_filter("problem");
