@@ -11,7 +11,7 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [dependencies]
-problem = "5.0.0"
+problem = "5.1.0"
 structopt = "0.2.12"
 log = { version = "0.4.5", features = ["std"] }
 boolinator = "2.4.0"

@@ -13,9 +13,13 @@ pub mod prelude {
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
-        /// Verbose mode (-v for Debug, -vv for Trace, -vvv Trace all modules)
+        /// Verbose mode (-v for INFO, -vv for DEBUG, -vvv for TRACE, -vvvv TRACE all modules)
         #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
         pub verbose: u8,
+
+        /// Only log errors
+        #[structopt(long = "errors-only")]
+        pub errors_only: bool,
 
         /// Force colorizing the logger output
         #[structopt(long = "force-colors")]
@@ -52,15 +56,21 @@ pub mod prelude {
         use log::Level;
         use loggerv::{Logger, Output};
 
+        let (base_level, verbose) = if args.errors_only {
+            (Level::Error, 0)
+        } else {
+            (Level::Warn, args.verbose)
+        };
+
         let mut logger = Logger::new()
-            .base_level(Level::Info)
-            .verbosity(args.verbose as u64)
+            .base_level(base_level)
+            .verbosity(verbose as u64)
             .output(&Level::Info, Output::Stderr)
             .output(&Level::Debug, Output::Stderr)
             .output(&Level::Trace, Output::Stderr)
             .module_path(false);
 
-        if args.verbose <= 2 {
+        if args.verbose <= 3 {
             logger = logger
                 .add_module_path_filter("cotton")
                 .add_module_path_filter("problem");
