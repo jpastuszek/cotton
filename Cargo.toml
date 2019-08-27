@@ -5,6 +5,7 @@ authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
 description = "A prelude with crates, types and functions useful for writing CLI tools."
 repository = "https://github.com/jpastuszek/cotton"
+documentation = "https://docs.rs/cotton"
 readme = "README.md"
 keywords = ["cli", "prelude"]
 categories = ["command-line-interface"]
