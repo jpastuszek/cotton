@@ -51,6 +51,12 @@ pub mod prelude {
         buffer
     }
 
+    pub fn read_stdin_bytes() -> Vec<u8> {
+        let mut buffer = Vec::new();
+        stdin().read_to_end(&mut buffer).or_failed_to("read bytes from stdin");
+        buffer
+    }
+
     pub fn init_logger(args: &LoggingOpt, module_paths: impl IntoIterator<Item = impl Into<String>>) {
         use log::Level;
         use loggerv::{Logger, Output};
