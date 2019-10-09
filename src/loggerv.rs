@@ -123,6 +123,7 @@
 use log::{SetLoggerError};
 use std::io::{self, Write};
 use ansi_term::Colour;
+use chrono::Utc;
 
 pub const DEFAULT_COLORS: bool = true;
 pub const DEFAULT_DEBUG_COLOR: Colour = Colour::White;
@@ -136,6 +137,7 @@ pub const DEFAULT_OFFSET: u64 = 1;
 pub const DEFAULT_SEPARATOR: &str = ": ";
 pub const DEFAULT_TRACE_COLOR: Colour = Colour::Purple;
 pub const DEFAULT_WARN_COLOR: Colour = Colour::Yellow;
+pub const DEFAULT_TIMESTAMP_FORMAT: &str = "%F %T%.3f";
 pub const MODULE_PATH_UNKNOWN: &str = "unknown";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -166,6 +168,7 @@ pub struct Logger {
     debug: Level,
     trace: Level,
     module_path_filters: Vec<String>,
+    timestamp_format: Option<String>,
 }
 
 impl Logger {
@@ -213,6 +216,7 @@ impl Logger {
                 color: DEFAULT_TRACE_COLOR,
             },
             module_path_filters: Vec::new(),
+            timestamp_format: None,
         }
     }
 
@@ -482,21 +486,21 @@ impl Logger {
         self
     }
 
-    /// Sets the module path filter list. 
-    /// 
+    /// Sets the module path filter list.
+    ///
     /// When any filter is matched as prefix of the log statement module path, the log
     /// statement will be logged if log level allows.
     /// Log statements not maching any filter will not be logged.
-    /// 
-    /// When not set (default) or set to empty Vec log statements will not be filtered 
+    ///
+    /// When not set (default) or set to empty Vec log statements will not be filtered
     /// by the module path.
-    /// 
+    ///
     /// # Example
     /// Log only messages comming from this program.
-    /// 
+    ///
     /// ```rust
     /// use cotton::prelude::*;
-    /// 
+    ///
     /// fn main() {
     ///     loggerv::Logger::new()
     ///         .module_path_filters(vec![module_path!().to_owned()])
@@ -512,17 +516,17 @@ impl Logger {
     }
 
     /// Adds module path filter to the list of module path filters.
-    /// 
+    ///
     /// When any filter is matched as prefix of the log statement module path, the log
     /// statement will be logged if log level allows.
     /// Log statements not maching any filter will not be logged.
-    /// 
-    /// When not filters were added log statements will not be filtered 
+    ///
+    /// When not filters were added log statements will not be filtered
     /// by the module path.
-    /// 
+    ///
     /// # Example
     /// Log only messages comming from this program.
-    /// 
+    ///
     /// ```rust
     ///
     /// use cotton::prelude::*;
@@ -672,6 +676,18 @@ impl Logger {
         self
     }
 
+    /// Enables use of timestamp with default format string.
+    pub fn timestamp_format_default(mut self) -> Self {
+        self.timestamp_format = Some(DEFAULT_TIMESTAMP_FORMAT.into());
+        self
+    }
+
+    /// Disables or enables timestamp with given format string.
+    pub fn timestamp_format(mut self, format: impl Into<Option<String>>) -> Self {
+        self.timestamp_format = format.into();
+        self
+    }
+
     /// Initializes the logger.
     ///
     /// This also consumes the logger. It cannot be further modified after initialization.
@@ -782,6 +798,12 @@ impl Logger {
     /// The tag portion is the of the log statement is the text to the left of the separator, while
     /// the text to the right of the separator is the message.
     fn create_tag(&self, record: &log::Record) -> String {
+        let timestamp = if let Some(format) = &self.timestamp_format {
+            format!("[{}] ", Utc::now().format(&format))
+        } else {
+            String::new()
+        };
+
         let level = record.level();
         let level_text = if self.include_level {
             level.to_string()
@@ -808,7 +830,7 @@ impl Logger {
         } else {
             String::new()
         };
-        let mut tag = format!("{}{}{}", level_text, module_path_text, line_text);
+        let mut tag = format!("{}{}{}{}", timestamp, level_text, module_path_text, line_text);
         if self.colors {
             tag = self.select_color(&level).paint(tag).to_string();
         }
@@ -1001,4 +1023,3 @@ mod tests {
         assert_eq!(logger.select_color(&log::Level::Trace), DEFAULT_TRACE_COLOR);
     }
 }
-
