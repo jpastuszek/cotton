@@ -15,6 +15,11 @@ enum ScriptAction {
     },
     /// Build in debug mode and execute
     Debug,
+    /// Remove all cached build files
+    Clean {
+        /// Path to script file
+        script: PathBuf,
+    },
 }
 
 /// Single file rust scritps.
@@ -167,6 +172,12 @@ impl Cargo {
             self.run(args)
         }
     }
+
+    fn clean(&self) -> Result<()> {
+        info!("Removing content of {}", self.project.display());
+        fs::remove_dir_all(&self.project)?;
+        Ok(())
+    }
 }
 
 fn main() -> Result<()> {
@@ -178,6 +189,10 @@ fn main() -> Result<()> {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
             trace!("{:?}", cargo);
             cargo.run(arguments).or_failed_to("run script");
+        }
+        Some(ScriptAction::Clean { script }) => {
+            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            cargo.clean().or_failed_to("clean script repository");
         }
         _ => unimplemented!()
     }
