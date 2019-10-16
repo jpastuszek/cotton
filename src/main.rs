@@ -30,7 +30,7 @@ struct Cli {
 #[derive(Debug)]
 struct Cargo {
     project_name: String,
-    script: String,
+    script: PathBuf,
     project: PathBuf,
     main: PathBuf,
     manifest: PathBuf,
@@ -70,6 +70,8 @@ impl Cargo {
             info!("Initializing cargo project in {}", project.display());
             cmd!("cargo", "init", "--quiet", "--vcs", "none", "--name", &project_name, "--bin", "--edition", "2018", &project).silent().problem_while("running cargo init")?;
 
+            fs::remove_file(&main).or_failed_to("remove main.rs form new repository");
+
             if !manifest_orig.exists() {
                 assert!(manifest.exists());
                 debug!("Keeping copy of original manifest: {}", manifest_orig.display());
@@ -77,12 +79,8 @@ impl Cargo {
             }
         }
 
-        assert!(main.exists(), "Bad repository state: missing main.rs");
         assert!(manifest.exists(), "Bad repository state: missing Cargo.toml");
         assert!(manifest_orig.exists(), "Bad repository state: missing: Cargo.toml.orig");
-
-        // TODO: read up to _DATA_ marker and provide File object seeked at first byte after it
-        let script = fs::read_to_string(script).problem_while("reading script contents")?;
 
         Ok(Cargo {
             project_name,
@@ -116,9 +114,14 @@ impl Cargo {
         }
     }
 
+    fn script_content(&self) -> Result<String> {
+        // TODO: read up to _DATA_ marker and provide File object seeked at first byte after it
+        Ok(fs::read_to_string(&self.script).problem_while("reading script contents")?)
+    }
+
     fn modified(&self) -> bool {
         //TODO: just check mtime?
-        hex_digest(Some(self.script.as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
+        hex_digest(Some(self.script_content().or_failed_to("read sript file").as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
     }
 
     /// Builds project.
@@ -139,12 +142,26 @@ impl Cargo {
         Ok(())
     }
 
+    /// Checks if there are script has been updated and updates repository from the script file.
+    fn update(&self) -> Result<()> {
+        if self.main.exists() && !self.modified() {
+            return Ok(())
+        }
+
+        info!("Updating project");
+        fs::write(&self.main, self.script_content()?).problem_while("writing new main.rs file")?;
+
+        Ok(())
+    }
+
     /// Just runs the binary building it if not built at all
     fn run<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
         if let Some(binary) = self.binary() {
             // TODO: replace return with ! when stable
             Err(Problem::from_error(exec(binary, args)).problem_while("executing compiled binary"))
         } else {
+            self.update()?;
+            assert!(self.main.exists());
             self.build()?;
             assert!(self.binary().is_some());
             self.run(args)
@@ -160,7 +177,7 @@ fn main() -> Result<()> {
         Some(ScriptAction::Run { script, arguments }) => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
             trace!("{:?}", cargo);
-            cargo.run(arguments);
+            cargo.run(arguments).or_failed_to("run script");
         }
         _ => unimplemented!()
     }
