@@ -3,23 +3,34 @@ use cotton::prelude::*;
 #[derive(Debug, StructOpt)]
 enum ScriptAction {
     /// Run `cargo check`
-    Check,
+    Check {
+        /// Path to script file
+        script: PathBuf,
+    },
     /// Build and stage for fast execution
-    Build,
+    Build {
+        /// Path to script file
+        script: PathBuf,
+    },
     /// Build, stage for fast execution and execute
-    Run {
+    Exec {
         /// Path to script file
         script: PathBuf,
         /// Arguments for the script
         arguments: Vec<String>, //TODO: OsString not supported
     },
-    /// Build in debug mode and execute
-    Debug,
-    /// Remove all cached build files
+    /// Build and run tests
+    Test {
+        /// Path to script file
+        script: PathBuf,
+    },
+    /// Remove all cached build files related to scipt file
     Clean {
         /// Path to script file
         script: PathBuf,
     },
+    /// Remove all cached build files
+    CleanAll,
 }
 
 /// Single file rust scritps.
@@ -29,7 +40,14 @@ struct Cli {
     logging: LoggingOpt,
 
     #[structopt(subcommand)]
-    script_action: Option<ScriptAction>,
+    script_action: ScriptAction,
+}
+
+
+#[derive(Debug)]
+enum UpdateStatus {
+    UpToDate,
+    Updated,
 }
 
 #[derive(Debug)]
@@ -129,6 +147,18 @@ impl Cargo {
         hex_digest(Some(self.script_content().or_failed_to("read sript file").as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
     }
 
+    /// Checks if there are script has been updated and updates repository from the script file.
+    fn update(&self) -> Result<UpdateStatus> {
+        if self.main.exists() && !self.modified() {
+            return Ok(UpdateStatus::UpToDate)
+        }
+
+        info!("Updating project");
+        fs::write(&self.main, self.script_content()?).problem_while("writing new main.rs file")?;
+
+        Ok(UpdateStatus::Updated)
+    }
+
     /// Builds project.
     ///
     /// Project files are updated from script source.
@@ -136,9 +166,7 @@ impl Cargo {
     /// Target file is moved into new 'active' target locatoin which is atomi so that caller
     /// can continue to call the script as it is beign built.
     fn build(&self) -> Result<()> {
-        assert!(self.release_target().is_none(), "Bad repository state: target file present");
         info!("Building release target");
-
         cmd!("cargo", "build", "--release").dir(&self.project).silent().problem_while("running cargo build")?;
 
         let target = self.release_target().expect("Build failed to create release target");
@@ -147,35 +175,44 @@ impl Cargo {
         Ok(())
     }
 
-    /// Checks if there are script has been updated and updates repository from the script file.
-    fn update(&self) -> Result<()> {
-        if self.main.exists() && !self.modified() {
-            return Ok(())
-        }
-
-        info!("Updating project");
-        fs::write(&self.main, self.script_content()?).problem_while("writing new main.rs file")?;
-
-        Ok(())
-    }
-
-    /// Just runs the binary building it if not built at all
-    fn run<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
+    /// Executes the binary building it if not built at all
+    fn exec<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
         if let Some(binary) = self.binary() {
             // TODO: replace return with ! when stable
             Err(Problem::from_error(exec(binary, args)).problem_while("executing compiled binary"))
         } else {
             self.update()?;
-            assert!(self.main.exists());
             self.build()?;
             assert!(self.binary().is_some());
-            self.run(args)
+            self.exec(args)
         }
+    }
+
+    /// Runs 'cargo check' on updated repository
+    fn check(&self) -> Result<()> {
+        self.update()?;
+        cmd!("cargo", "check").dir(&self.project).exec().problem_while("running cargo check")?;
+        Ok(())
+    }
+
+    /// Runs 'cargo test' on updated repository
+    fn test(&self) -> Result<()> {
+        self.update()?;
+        cmd!("cargo", "test").dir(&self.project).exec().problem_while("running cargo test")?;
+        Ok(())
     }
 
     fn clean(&self) -> Result<()> {
         info!("Removing content of {}", self.project.display());
         fs::remove_dir_all(&self.project)?;
+        Ok(())
+    }
+
+    fn clean_all() -> Result<()> {
+        let project_root = app_cache(None)?;
+
+        info!("Removing content of {}", project_root.display());
+        fs::remove_dir_all(&project_root)?;
         Ok(())
     }
 }
@@ -184,7 +221,7 @@ fn main() -> Result<()> {
     if let Some(script) = std::env::args().skip(1).next().and_then(|arg1| arg1.ends_with(".rs").as_some(arg1)) {
         ::problem::format_panic_to_stderr();
         let cargo = Cargo::new(PathBuf::from(script)).or_failed_to("initialize cargo project");
-        cargo.run(std::env::args().skip(2)).or_failed_to("run script");
+        cargo.exec(std::env::args().skip(2)).or_failed_to("exec script");
         unreachable!()
     }
 
@@ -192,16 +229,35 @@ fn main() -> Result<()> {
     init_logger(&args.logging, vec![module_path!()]);
 
     match args.script_action {
-        Some(ScriptAction::Run { script, arguments }) => {
+        ScriptAction::Exec { script, arguments } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
-            trace!("{:?}", cargo);
-            cargo.run(arguments).or_failed_to("run script");
+            if let UpdateStatus::Updated = cargo.update().or_failed_to("update repository") {
+                cargo.build().or_failed_to("build script");
+            }
+            cargo.exec(arguments).or_failed_to("exec script");
         }
-        Some(ScriptAction::Clean { script }) => {
+        ScriptAction::Build { script } => {
+            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            match cargo.update().or_failed_to("update repository") {
+                UpdateStatus::UpToDate => info!("Repository is up to date"),
+                UpdateStatus::Updated => cargo.build().or_failed_to("build script"),
+            }
+        }
+        ScriptAction::Check { script } => {
+            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            cargo.check().or_failed_to("check script");
+        }
+        ScriptAction::Test { script } => {
+            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            cargo.test().or_failed_to("test script");
+        }
+        ScriptAction::Clean { script } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
             cargo.clean().or_failed_to("clean script repository");
         }
-        _ => unimplemented!()
+        ScriptAction::CleanAll => {
+            Cargo::clean_all().or_failed_to("clean script repository");
+        }
     }
     Ok(())
 }
