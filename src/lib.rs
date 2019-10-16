@@ -1,15 +1,40 @@
 pub mod loggerv;
+mod digest;
+mod app_dir;
+mod cmd;
+
 pub mod prelude {
+    // Often used I/O
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
     pub use std::fs::File;
-    pub use problem::prelude::*;
-    pub use structopt::StructOpt;
+    pub use std::path::{PathBuf, Path};
+
+    // Logging and messaging
+    pub use crate::loggerv;
     pub use std::fmt::{self, Display, Debug};
     pub use log::{self, trace, debug, info, warn, error, log_enabled};
+
+    // Arguments
+    pub use structopt::StructOpt;
+
+    // Error handling
+    pub use problem::prelude::*;
+
+    // Running commands
+    pub use super::cmd::*;
+
+    // Content hashing
+    pub use super::digest::*;
+
+    // App directory
+    pub use super::app_dir::*;
+
+    // Handy extensions
     pub use boolinator::Boolinator;
     pub use itertools::*;
     pub use tap::*;
-    pub use crate::loggerv;
+
+    pub type Result<T> = std::result::Result<T, Problem>;
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
