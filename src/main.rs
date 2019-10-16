@@ -181,6 +181,13 @@ impl Cargo {
 }
 
 fn main() -> Result<()> {
+    if let Some(script) = std::env::args().skip(1).next().and_then(|arg1| arg1.ends_with(".rs").as_some(arg1)) {
+        ::problem::format_panic_to_stderr();
+        let cargo = Cargo::new(PathBuf::from(script)).or_failed_to("initialize cargo project");
+        cargo.run(std::env::args().skip(2)).or_failed_to("run script");
+        unreachable!()
+    }
+
     let args = Cli::from_args();
     init_logger(&args.logging, vec![module_path!()]);
 
