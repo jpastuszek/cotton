@@ -27,9 +27,14 @@ struct Cli {
     script_action: Option<ScriptAction>,
 }
 
+#[derive(Debug)]
 struct Cargo {
-    script: PathBuf,
+    project_name: String,
+    script: String,
     project: PathBuf,
+    main: PathBuf,
+    manifest: PathBuf,
+    manifest_orig: PathBuf,
 }
 
 impl Cargo {
@@ -50,23 +55,100 @@ impl Cargo {
         let parent_path_digest = hex_digest(Some(parent_path))[0..16].to_string();
         debug!("Parent path: {} (digest: {})", parent_path, parent_path_digest);
 
-        let project_name = script.file_stem().unwrap().to_str().ok_or_problem("Script stem is not UTF-8 compatible")?;
+        let project_name = script.file_stem().unwrap().to_str().ok_or_problem("Script stem is not UTF-8 compatible")?.to_owned();
         debug!("Project name: {}", project_name);
 
         let project = app_cache(format!("project-{}-{}", parent_path_digest, project_name).as_str())?;
-        info!("Project path: {}", project.display());
+        debug!("Project path: {}", project.display());
 
         let src = project.join("src");
+        let main = src.join("main.rs");
+        let manifest = project.join("Cargo.toml");
+        let manifest_orig = project.join("Cargo.toml.orig");
 
         if !src.exists() {
-            info!("Initializing cargo project");
-            cmd!("cargo", "init", "--quiet", "--vcs", "none", "--name", project_name, "--bin", "--edition", "2018", &project).silent().problem_while("running cargo init")?;
+            info!("Initializing cargo project in {}", project.display());
+            cmd!("cargo", "init", "--quiet", "--vcs", "none", "--name", &project_name, "--bin", "--edition", "2018", &project).silent().problem_while("running cargo init")?;
+
+            if !manifest_orig.exists() {
+                assert!(manifest.exists());
+                debug!("Keeping copy of original manifest: {}", manifest_orig.display());
+                fs::copy(&manifest, &manifest_orig).problem_while("copying manifest")?;
+            }
         }
 
+        assert!(main.exists(), "Bad repository state: missing main.rs");
+        assert!(manifest.exists(), "Bad repository state: missing Cargo.toml");
+        assert!(manifest_orig.exists(), "Bad repository state: missing: Cargo.toml.orig");
+
+        // TODO: read up to _DATA_ marker and provide File object seeked at first byte after it
+        let script = fs::read_to_string(script).problem_while("reading script contents")?;
+
         Ok(Cargo {
+            project_name,
             script,
             project,
+            main,
+            manifest,
+            manifest_orig,
         })
+    }
+
+    fn release_target(&self) -> Option<PathBuf> {
+        let target = self.project.join("target").join("release").join(&self.project_name);
+        if target.is_file() {
+            Some(target)
+        } else {
+            None
+        }
+    }
+
+    fn binary_path(&self) -> PathBuf {
+        self.project.join(&self.project_name)
+    }
+
+    fn binary(&self) -> Option<PathBuf> {
+        let binary = self.binary_path();
+        if binary.is_file() {
+            Some(binary)
+        } else {
+            None
+        }
+    }
+
+    fn modified(&self) -> bool {
+        //TODO: just check mtime?
+        hex_digest(Some(self.script.as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
+    }
+
+    /// Builds project.
+    ///
+    /// Project files are updated from script source.
+    /// Cargo is called to build the target file.
+    /// Target file is moved into new 'active' target locatoin which is atomi so that caller
+    /// can continue to call the script as it is beign built.
+    fn build(&self) -> Result<()> {
+        assert!(self.release_target().is_none(), "Bad repository state: target file present");
+        info!("Building release target");
+
+        cmd!("cargo", "build", "--release").dir(&self.project).silent().problem_while("running cargo build")?;
+
+        let target = self.release_target().expect("Build failed to create release target");
+        fs::rename(target, self.binary_path()).problem_while("moving compiled target final location")?;
+
+        Ok(())
+    }
+
+    /// Just runs the binary building it if not built at all
+    fn run<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
+        if let Some(binary) = self.binary() {
+            // TODO: replace return with ! when stable
+            Err(Problem::from_error(exec(binary, args)).problem_while("executing compiled binary"))
+        } else {
+            self.build()?;
+            assert!(self.binary().is_some());
+            self.run(args)
+        }
     }
 }
 
@@ -77,7 +159,8 @@ fn main() -> Result<()> {
     match args.script_action {
         Some(ScriptAction::Run { script, arguments }) => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
-
+            trace!("{:?}", cargo);
+            cargo.run(arguments);
         }
         _ => unimplemented!()
     }

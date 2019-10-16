@@ -6,7 +6,7 @@ mod cmd;
 pub mod prelude {
     // Often used I/O
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
-    pub use std::fs::File;
+    pub use std::fs::{self, File};
     pub use std::path::{PathBuf, Path};
 
     // Logging and messaging
@@ -22,6 +22,7 @@ pub mod prelude {
 
     // Running commands
     pub use super::cmd::*;
+    pub use exec::execvp as exec;
 
     // Content hashing
     pub use super::digest::*;
