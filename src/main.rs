@@ -155,6 +155,22 @@ impl Cargo {
         format!(include_str!("../template.rs"), name = name)
     }
 
+    fn manifest_content(&self) -> Result<String> {
+        let manifest = self.script_content()?
+            .lines()
+            .map(|l| l.trim())
+            .skip_while(|l| *l != "/* Cargo.toml")
+            .skip(1)
+            .take_while(|l| *l != "*/")
+            .join("\n");
+
+        if manifest.is_empty() {
+            Err(Problem::from_error("Cargo.toml manifest not found in the script"))
+        } else {
+            Ok(manifest)
+        }
+    }
+
     fn modified(&self) -> bool {
         //TODO: just check mtime?
         hex_digest(Some(self.script_content().or_failed_to("read sript file").as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
@@ -168,6 +184,7 @@ impl Cargo {
 
         info!("Updating project");
         fs::write(&self.main, self.script_content()?).problem_while("writing new main.rs file")?;
+        fs::write(&self.manifest, self.manifest_content()?).problem_while("writing new Cargo.toml file")?;
 
         Ok(UpdateStatus::Updated)
     }
@@ -180,7 +197,7 @@ impl Cargo {
     /// can continue to call the script as it is beign built.
     fn build(&self) -> Result<()> {
         info!("Building release target");
-        cmd!("cargo", "build", "--release").dir(&self.project).silent().problem_while("running cargo build")?;
+        cmd!("cargo", "build", "--color", "always", "--release").dir(&self.project).silent().problem_while("running cargo build")?;
 
         let target = self.release_target().expect("Build failed to create release target");
         fs::rename(target, self.binary_path()).problem_while("moving compiled target final location")?;
@@ -204,14 +221,14 @@ impl Cargo {
     /// Runs 'cargo check' on updated repository
     fn check(&self) -> Result<()> {
         self.update()?;
-        cmd!("cargo", "check").dir(&self.project).exec().problem_while("running cargo check")?;
+        cmd!("cargo", "check", "--color", "always").dir(&self.project).exec().problem_while("running cargo check")?;
         Ok(())
     }
 
     /// Runs 'cargo test' on updated repository
     fn test(&self) -> Result<()> {
         self.update()?;
-        cmd!("cargo", "test").dir(&self.project).exec().problem_while("running cargo test")?;
+        cmd!("cargo", "test", "--color", "always").dir(&self.project).exec().problem_while("running cargo test")?;
         Ok(())
     }
 
