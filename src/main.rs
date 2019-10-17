@@ -52,17 +52,35 @@ struct Cli {
     script_action: ScriptAction,
 }
 
-
-#[derive(Debug)]
-enum UpdateStatus {
-    UpToDate,
-    Updated,
-}
-
 #[derive(Debug, Clone, Copy)]
 enum CargoMode {
     Silent,
     Verbose,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum CargoState {
+    ScriptDiffers,
+    NoBinary,
+    BinaryOutdated,
+    UpToDate,
+}
+
+impl CargoState {
+    fn needs_update(&self) -> bool {
+        match self {
+            CargoState::ScriptDiffers => true,
+            _ => false
+        }
+    }
+
+    fn needs_build(&self) -> bool {
+        match self {
+            CargoState::ScriptDiffers => true,
+            CargoState::NoBinary | CargoState::BinaryOutdated => true,
+            _ => false
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -70,9 +88,6 @@ struct Cargo {
     project_name: String,
     script: PathBuf,
     project: PathBuf,
-    main: PathBuf,
-    manifest: PathBuf,
-    manifest_orig: PathBuf,
 }
 
 impl Cargo {
@@ -99,57 +114,32 @@ impl Cargo {
         let project = app_cache(format!("project-{}-{}", parent_path_digest, project_name).as_str())?;
         debug!("Project path: {}", project.display());
 
-        let src = project.join("src");
-        let main = src.join("main.rs");
-        let manifest = project.join("Cargo.toml");
-        let manifest_orig = project.join("Cargo.toml.orig");
-
-        if !src.exists() {
+        if !project.join("src").exists() {
             info!("Initializing cargo project in {}", project.display());
             cmd!("cargo", "init", "--quiet", "--vcs", "none", "--name", &project_name, "--bin", "--edition", "2018", &project).silent().problem_while("running cargo init")?;
-
-            fs::remove_file(&main).or_failed_to("remove main.rs form new repository");
-
-            if !manifest_orig.exists() {
-                assert!(manifest.exists());
-                debug!("Keeping copy of original manifest: {}", manifest_orig.display());
-                fs::copy(&manifest, &manifest_orig).problem_while("copying manifest")?;
-            }
         }
-
-        assert!(manifest.exists(), "Bad repository state: missing Cargo.toml");
-        assert!(manifest_orig.exists(), "Bad repository state: missing: Cargo.toml.orig");
 
         Ok(Cargo {
             project_name,
             script,
             project,
-            main,
-            manifest,
-            manifest_orig,
         })
     }
 
-    fn release_target(&self) -> Option<PathBuf> {
-        let target = self.project.join("target").join("release").join(&self.project_name);
-        if target.is_file() {
-            Some(target)
-        } else {
-            None
-        }
+    fn release_target_path(&self) -> PathBuf {
+        self.project.join("target").join("release").join(&self.project_name)
+    }
+
+    fn main_path(&self) -> PathBuf {
+        self.project.join("src").join("main.rs")
+    }
+
+    fn manifest_path(&self) -> PathBuf {
+        self.project.join("Cargo.toml")
     }
 
     fn binary_path(&self) -> PathBuf {
         self.project.join(&self.project_name)
-    }
-
-    fn binary(&self) -> Option<PathBuf> {
-        let binary = self.binary_path();
-        if binary.is_file() {
-            Some(binary)
-        } else {
-            None
-        }
     }
 
     fn script_content(&self) -> Result<String> {
@@ -177,30 +167,37 @@ impl Cargo {
         }
     }
 
-    fn modified(&self) -> bool {
-        //TODO: just check mtime?
-        hex_digest(Some(self.script_content().or_failed_to("read sript file").as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
-    }
-
-    /// Checks if there are script has been updated and updates repository from the script file.
-    fn update(&self) -> Result<UpdateStatus> {
-        if self.main.exists() && !self.modified() {
-            return Ok(UpdateStatus::UpToDate)
+    /// Checks state of the repository and script.
+    fn state(&self) -> Result<CargoState> {
+        if hex_digest(Some(self.script_content()?.as_str())) != hex_digest_file(&self.main_path())? {
+            return Ok(CargoState::ScriptDiffers)
         }
 
-        info!("Updating project");
-        fs::write(&self.main, self.script_content()?).problem_while("writing new main.rs file")?;
-        fs::write(&self.manifest, self.manifest_content()?).problem_while("writing new Cargo.toml file")?;
+        let binary_path = self.binary_path();
 
-        Ok(UpdateStatus::Updated)
+        if !binary_path.is_file() {
+            return Ok(CargoState::NoBinary)
+        }
+
+        // binary should be newer than the script file or we have a failed build of the script
+        if fs::metadata(&binary_path)?.modified()? < fs::metadata(&self.script)?.modified()? {
+            return Ok(CargoState::BinaryOutdated)
+        }
+
+        Ok(CargoState::UpToDate)
     }
 
-    /// Builds project.
-    ///
-    /// Project files are updated from script source.
-    /// Cargo is called to build the target file.
-    /// Target file is moved into new 'active' target locatoin which is atomi so that caller
-    /// can continue to call the script as it is beign built.
+    /// Updates repository from the script file.
+    fn update(&self) -> Result<()> {
+        info!("Updating project");
+
+        fs::write(&self.main_path(), self.script_content()?).problem_while("writing new main.rs file")?;
+        fs::write(&self.manifest_path(), self.manifest_content()?).problem_while("writing new Cargo.toml file")?;
+
+        Ok(())
+    }
+
+    /// Builds cargo project.
     fn build(&self, mode: CargoMode) -> Result<()> {
         info!("Building release target");
         match mode {
@@ -209,23 +206,42 @@ impl Cargo {
         }
         .problem_while("running cargo build")?;
 
-        let target = self.release_target().expect("Build failed to create release target");
-        fs::rename(target, self.binary_path()).problem_while("moving compiled target final location")?;
+        fs::rename(self.release_target_path(), self.binary_path()).problem_while("moving compiled target final location")?;
 
         Ok(())
     }
 
-    /// Executes the binary building it if not built at all
-    fn exec<I>(&self, args: I, mode: CargoMode) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
-        if let Some(binary) = self.binary() {
-            // TODO: replace return with ! when stable
-            Err(Problem::from_error(exec(binary, args)).problem_while("executing compiled binary"))
-        } else {
+    /// Returns true if execute has binary to run.
+    fn binary_built(&self) -> bool {
+        self.binary_path().is_file()
+    }
+
+    /// Replace this image with imange of the binary.
+    fn execute<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
+        // TODO: replace return with ! when stable
+        Err(Problem::from_error(exec(self.binary_path(), args)).problem_while("executing compiled binary"))
+    }
+
+    /// Prepares executable
+    fn ensure_updated(&self) -> Result<()> {
+        let state = self.state()?;
+        if state.needs_update() {
             self.update()?;
-            self.build(mode)?;
-            assert!(self.binary().is_some());
-            self.exec(args, mode)
         }
+        Ok(())
+    }
+
+    /// Prepares executable
+    fn ensure_built(&self, mode: CargoMode) -> Result<()> {
+        let state = self.state()?;
+        debug!("State: {:?}", state);
+        if state.needs_update() {
+            self.update()?;
+        }
+        if state.needs_build() {
+            self.build(mode)?;
+        }
+        Ok(())
     }
 
     /// Runs 'cargo check' on updated repository
@@ -260,8 +276,15 @@ impl Cargo {
 fn main() -> Result<()> {
     if let Some(script) = std::env::args().skip(1).next().and_then(|arg1| arg1.ends_with(".rs").as_some(arg1)) {
         ::problem::format_panic_to_stderr();
+
         let cargo = Cargo::new(PathBuf::from(script)).or_failed_to("initialize cargo project");
-        cargo.exec(std::env::args().skip(2), CargoMode::Silent).or_failed_to("exec script");
+
+        if !cargo.binary_built() {
+            cargo.ensure_built(CargoMode::Silent).or_failed_to("build script");
+        }
+
+        cargo.execute(std::env::args().skip(2)).unwrap();
+
         unreachable!()
     }
 
@@ -285,24 +308,21 @@ fn main() -> Result<()> {
         }
         ScriptAction::Exec { script, arguments } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
-            if let UpdateStatus::Updated = cargo.update().or_failed_to("update repository") {
-                cargo.build(CargoMode::Verbose).or_failed_to("build script");
-            }
-            cargo.exec(arguments, CargoMode::Verbose).or_failed_to("exec script");
+            cargo.ensure_built(CargoMode::Verbose).or_failed_to("update_and_build script binary");
+            cargo.execute(arguments).unwrap();
         }
         ScriptAction::Build { script } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
-            match cargo.update().or_failed_to("update repository") {
-                UpdateStatus::UpToDate => info!("Repository is up to date"),
-                UpdateStatus::Updated => cargo.build(CargoMode::Verbose).or_failed_to("build script"),
-            }
+            cargo.ensure_built(CargoMode::Verbose).or_failed_to("build script binary");
         }
         ScriptAction::Check { script } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            cargo.ensure_updated().or_failed_to("update cargo project");
             cargo.check().or_failed_to("check script");
         }
         ScriptAction::Test { script } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            cargo.ensure_updated().or_failed_to("update cargo project");
             cargo.test().or_failed_to("test script");
         }
         ScriptAction::Clean { script } => {
