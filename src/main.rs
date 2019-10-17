@@ -1,7 +1,15 @@
 use cotton::prelude::*;
+use std::os::unix::fs::PermissionsExt;
+
+const MODE_USER_EXEC: u32 = 0o100;
 
 #[derive(Debug, StructOpt)]
 enum ScriptAction {
+    /// Create new scipt from template
+    New {
+        /// Path to script file
+        script: PathBuf,
+    },
     /// Run `cargo check`
     Check {
         /// Path to script file
@@ -16,6 +24,7 @@ enum ScriptAction {
     Exec {
         /// Path to script file
         script: PathBuf,
+
         /// Arguments for the script
         arguments: Vec<String>, //TODO: OsString not supported
     },
@@ -142,6 +151,10 @@ impl Cargo {
         Ok(fs::read_to_string(&self.script).problem_while("reading script contents")?)
     }
 
+    fn script_template<'i>(name: &str) -> String {
+        format!(include_str!("../template.rs"), name = name)
+    }
+
     fn modified(&self) -> bool {
         //TODO: just check mtime?
         hex_digest(Some(self.script_content().or_failed_to("read sript file").as_str())) != hex_digest_file(&self.main).or_failed_to("digest main.rs")
@@ -229,6 +242,20 @@ fn main() -> Result<()> {
     init_logger(&args.logging, vec![module_path!()]);
 
     match args.script_action {
+        ScriptAction::New { script } => {
+            let project_name = script.file_stem().unwrap().to_str().ok_or_problem("Script stem is not UTF-8 compatible")?.to_owned();
+            info!("Generating new sciprt {:?} in {}", project_name, script.display());
+
+            fs::write(&script, &Cargo::script_template(&project_name)).or_failed_to("write template to new scipt file");
+
+            let file = File::open(&script).unwrap();
+            let meta = file.metadata().unwrap();
+            let mut perm = meta.permissions();
+            perm.set_mode(perm.mode() | MODE_USER_EXEC);
+            drop(file);
+
+            fs::set_permissions(&script, perm).or_failed_to("to set permission");
+        }
         ScriptAction::Exec { script, arguments } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
             if let UpdateStatus::Updated = cargo.update().or_failed_to("update repository") {
