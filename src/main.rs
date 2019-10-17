@@ -59,6 +59,12 @@ enum UpdateStatus {
     Updated,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum CargoMode {
+    Silent,
+    Verbose,
+}
+
 #[derive(Debug)]
 struct Cargo {
     project_name: String,
@@ -195,9 +201,13 @@ impl Cargo {
     /// Cargo is called to build the target file.
     /// Target file is moved into new 'active' target locatoin which is atomi so that caller
     /// can continue to call the script as it is beign built.
-    fn build(&self) -> Result<()> {
+    fn build(&self, mode: CargoMode) -> Result<()> {
         info!("Building release target");
-        cmd!("cargo", "build", "--color", "always", "--release").dir(&self.project).silent().problem_while("running cargo build")?;
+        match mode {
+            CargoMode::Silent => cmd!("cargo", "build", "--release").dir(&self.project).silent(),
+            CargoMode::Verbose => cmd!("cargo", "build", "--color", "always", "--release").dir(&self.project).exec(),
+        }
+        .problem_while("running cargo build")?;
 
         let target = self.release_target().expect("Build failed to create release target");
         fs::rename(target, self.binary_path()).problem_while("moving compiled target final location")?;
@@ -206,15 +216,15 @@ impl Cargo {
     }
 
     /// Executes the binary building it if not built at all
-    fn exec<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
+    fn exec<I>(&self, args: I, mode: CargoMode) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
         if let Some(binary) = self.binary() {
             // TODO: replace return with ! when stable
             Err(Problem::from_error(exec(binary, args)).problem_while("executing compiled binary"))
         } else {
             self.update()?;
-            self.build()?;
+            self.build(mode)?;
             assert!(self.binary().is_some());
-            self.exec(args)
+            self.exec(args, mode)
         }
     }
 
@@ -251,7 +261,7 @@ fn main() -> Result<()> {
     if let Some(script) = std::env::args().skip(1).next().and_then(|arg1| arg1.ends_with(".rs").as_some(arg1)) {
         ::problem::format_panic_to_stderr();
         let cargo = Cargo::new(PathBuf::from(script)).or_failed_to("initialize cargo project");
-        cargo.exec(std::env::args().skip(2)).or_failed_to("exec script");
+        cargo.exec(std::env::args().skip(2), CargoMode::Silent).or_failed_to("exec script");
         unreachable!()
     }
 
@@ -276,15 +286,15 @@ fn main() -> Result<()> {
         ScriptAction::Exec { script, arguments } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
             if let UpdateStatus::Updated = cargo.update().or_failed_to("update repository") {
-                cargo.build().or_failed_to("build script");
+                cargo.build(CargoMode::Verbose).or_failed_to("build script");
             }
-            cargo.exec(arguments).or_failed_to("exec script");
+            cargo.exec(arguments, CargoMode::Verbose).or_failed_to("exec script");
         }
         ScriptAction::Build { script } => {
             let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
             match cargo.update().or_failed_to("update repository") {
                 UpdateStatus::UpToDate => info!("Repository is up to date"),
-                UpdateStatus::Updated => cargo.build().or_failed_to("build script"),
+                UpdateStatus::Updated => cargo.build(CargoMode::Verbose).or_failed_to("build script"),
             }
         }
         ScriptAction::Check { script } => {
