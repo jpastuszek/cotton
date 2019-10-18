@@ -3,6 +3,12 @@ mod digest;
 mod app_dir;
 mod cmd;
 
+// needed for derive to work
+pub use structopt;
+
+// there is some extra stuff in there to be used
+pub use problem;
+
 pub mod prelude {
     // Often used I/O
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
