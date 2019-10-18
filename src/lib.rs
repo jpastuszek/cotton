@@ -76,7 +76,6 @@ pub mod prelude {
         }
     }
 
-    //TODO: read_stdin_lines() -> impl Iterator<Item = String>
     pub fn read_stdin() -> String {
         let mut buffer = String::new();
         stdin().read_to_string(&mut buffer).or_failed_to("read UTF-8 string from stdin");
@@ -87,6 +86,10 @@ pub mod prelude {
         let mut buffer = Vec::new();
         stdin().read_to_end(&mut buffer).or_failed_to("read bytes from stdin");
         buffer
+    }
+
+    pub fn read_stdin_lines() -> impl Iterator<Item = String> {
+        BufReader::new(stdin()).lines().or_failed_to("read UTF-8 lines from stdin")
     }
 
     pub fn init_logger(args: &LoggingOpt, module_paths: impl IntoIterator<Item = impl Into<String>>) {
