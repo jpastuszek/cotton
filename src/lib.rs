@@ -26,6 +26,7 @@ pub mod prelude {
     // Error handling
     pub use problem::prelude::*;
     pub use problem::result::*;
+    pub use assert_matches::assert_matches;
 
     // Running commands
     pub use super::cmd::*;
