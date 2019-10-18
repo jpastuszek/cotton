@@ -25,6 +25,7 @@ pub mod prelude {
 
     // Error handling
     pub use problem::prelude::*;
+    pub use problem::result::*;
 
     // Running commands
     pub use super::cmd::*;
@@ -40,8 +41,6 @@ pub mod prelude {
     pub use boolinator::Boolinator;
     pub use itertools::*;
     pub use tap::*;
-
-    pub type Result<T> = std::result::Result<T, Problem>;
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
