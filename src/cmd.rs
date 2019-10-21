@@ -1,7 +1,38 @@
 use problem::*;
 
+pub use std::convert::Infallible;
+pub use std::path::Path;
 pub use duct::cmd;
 pub use std::ffi::{OsString, OsStr};
+
+/// Execute program with given path by replacing current program image.
+///
+/// Program name is taken from file stem of program path.
+pub fn exec<S>(program: &Path, args: &[S]) -> Result<Infallible, Problem>
+where
+    S: AsRef<OsStr>,
+{
+    let name = program
+        .file_stem().ok_or_problem_with(|| format!("Program path has no file stem and no program name given: {}", program.display()))?;
+
+    exec_with_name(program, name, args)
+}
+
+
+/// Execute program with given path by replacing current program image and using given name for
+/// argument 0 of executed program.
+pub fn exec_with_name<N, S>(program: &Path, name: N, args: &[S]) -> Result<Infallible, Problem>
+where
+    N: AsRef<OsStr>,
+    S: AsRef<OsStr>,
+{
+    // arg[0] value for program
+    let name: &OsStr = name.as_ref();
+    let args = args.iter().map(|a| a.as_ref());
+
+    let err = exec::execvp(program, Some(name).into_iter().chain(args));
+    Err(err).problem_while(format!("executing program: {}", program.display()))
+}
 
 pub trait ExpressionExt {
     /// Run command capturing stderr and stdout.
@@ -9,7 +40,7 @@ pub trait ExpressionExt {
     /// Returns problem message containing stderr and stdout.
     fn silent(&self) -> Result<(), Problem>;
 
-    /// Run command and exit with it's exit status code if not successfull.
+    /// Run command and exit with it's exit status code if not successful.
     fn exec(&self) -> Result<(), Problem>;
 }
 

@@ -10,6 +10,9 @@ pub use structopt;
 pub use problem;
 
 pub mod prelude {
+    // Until we have !
+    pub use std::convert::Infallible;
+
     // Often used I/O
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
     pub use std::fs::{self, File};
@@ -30,7 +33,6 @@ pub mod prelude {
 
     // Running commands
     pub use super::cmd::*;
-    pub use exec::execvp as exec;
 
     // Content hashing
     pub use super::digest::*;
