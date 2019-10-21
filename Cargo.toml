@@ -1,6 +1,6 @@
 [package]
 name = "cotton"
-version = "0.0.5"
+version = "0.0.6-alpha.0"
 authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
 description = "A prelude with crates, types and functions useful for writing CLI tools."
