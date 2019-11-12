@@ -2,6 +2,7 @@ pub mod loggerv;
 mod digest;
 mod app_dir;
 mod cmd;
+mod time;
 
 // needed for derive to work
 pub use structopt;
@@ -39,6 +40,9 @@ pub mod prelude {
 
     // App directory
     pub use super::app_dir::*;
+
+    // Time and duration
+    pub use super::time::*;
 
     // Handy extensions
     pub use boolinator::Boolinator;
