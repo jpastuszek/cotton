@@ -23,6 +23,30 @@ impl DurationExt for Duration {
     }
 }
 
+pub use chrono;
+
+pub trait ChoronoDurationExt {
+    /// Constructs Duration from &str parsed as f64 representing seconds.
+    ///
+    /// This is useful with `structopt` to get `chrono::Duration`: `parse(try_from_str = chrono::Duration::from_secs_str)`
+    fn from_secs_str(val: &str) -> Result<chrono::Duration, ParseFloatError>;
+
+    /// Constructs Duration from &str parsed as f64 representing milliseconds.
+    ///
+    /// This is useful with `structopt` to get `chrono::Duration`: `parse(try_from_str = chrono::Duration::from_millis_str)`
+    fn from_millis_str(val: &str) -> Result<chrono::Duration, ParseFloatError>;
+}
+
+impl ChoronoDurationExt for chrono::Duration {
+    fn from_secs_str(val: &str) -> Result<chrono::Duration, ParseFloatError> {
+        Ok(chrono::Duration::from_std(Duration::from_secs_str(val)?).unwrap())
+    }
+
+    fn from_millis_str(val: &str) -> Result<chrono::Duration, ParseFloatError> {
+        Ok(chrono::Duration::from_std(Duration::from_millis_str(val)?).unwrap())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -34,6 +58,15 @@ mod tests {
         assert_eq!(d.as_millis(), 1500);
 
         assert_eq!(d, Duration::from_millis_str("1500").unwrap());
+    }
+
+    #[test]
+    fn chrono_duration_from_str() {
+        let d = chrono::Duration::from_secs_str("1.5").unwrap();
+
+        assert_eq!(d.num_milliseconds(), 1500);
+
+        assert_eq!(d, chrono::Duration::from_millis_str("1500").unwrap());
     }
 }
 
