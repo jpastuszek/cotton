@@ -29,7 +29,8 @@ pub mod prelude {
 
     // Error handling
     pub use problem::prelude::*;
-    pub use problem::result::*;
+    pub use problem::result::FinalResult;
+    pub use problem::result; // Don't import Result but let it be imported via: use cotton::result::*;
     pub use assert_matches::assert_matches;
 
     // Running commands
