@@ -3,6 +3,7 @@ mod digest;
 mod app_dir;
 mod cmd;
 mod time;
+pub mod unix;
 
 // needed for derive to work
 pub use structopt;
@@ -18,6 +19,9 @@ pub mod prelude {
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
     pub use std::fs::{self, File};
     pub use std::path::{PathBuf, Path};
+
+    // Unix
+    pub use crate::unix;
 
     // Logging and messaging
     pub use crate::loggerv;

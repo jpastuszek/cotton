@@ -26,6 +26,10 @@ shaman = "0.1.0"
 app_dirs = "1.2.1"
 exec = "0.3.1"
 assert_matches = "1.3.0"
+pwd = "1.3.0"
+#umask = "0.1.8"
+umask = { path = "../umask" }
+nix = "0.16.0"
 
 [dev-dependencies]
 clap = "2.33.0"
