@@ -8,6 +8,7 @@ pub use std::ffi::{OsString, OsStr};
 /// Execute program with given path by replacing current program image.
 ///
 /// Program name is taken from file stem of program path.
+#[cfg(target_family = "unix")]
 pub fn exec<S>(program: &Path, args: &[S]) -> Result<Infallible, Problem>
 where
     S: AsRef<OsStr>,
@@ -21,6 +22,7 @@ where
 
 /// Execute program with given path by replacing current program image and using given name for
 /// argument 0 of executed program.
+#[cfg(target_family = "unix")]
 pub fn exec_with_name<N, S>(program: &Path, name: N, args: &[S]) -> Result<Infallible, Problem>
 where
     N: AsRef<OsStr>,

@@ -1,6 +1,6 @@
 [package]
 name = "cotton"
-version = "0.0.8-alpha.0"
+version = "0.0.10-alpha.0"
 authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
 description = "A prelude with crates, types and functions useful for writing CLI tools."
@@ -23,9 +23,11 @@ atty = "0.2.11"
 chrono = "0.4.9"
 duct = "0.13.2"
 shaman = "0.1.0"
-app_dirs = "1.2.1"
-exec = "0.3.1"
+app_dirs = { version = "2", package = "app_dirs2" }
 assert_matches = "1.3.0"
+
+[target.'cfg(unix)'.dependencies]
+exec = "0.3.1"
 
 [dev-dependencies]
 clap = "2.33.0"
