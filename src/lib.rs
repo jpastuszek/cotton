@@ -19,6 +19,10 @@ pub mod prelude {
     pub use std::fs::{self, File};
     pub use std::path::{PathBuf, Path};
 
+    // Often used data structures
+    pub use std::collections::HashMap;
+    pub use std::collections::HashSet;
+
     // Logging and messaging
     pub use crate::loggerv;
     pub use std::fmt::{self, Display, Debug};
