@@ -49,9 +49,12 @@ pub mod prelude {
     // Time and duration
     pub use super::time::*;
 
+    // Iterators
+    pub use itertools::*;
+    pub use std::iter::*;
+
     // Handy extensions
     pub use boolinator::Boolinator;
-    pub use itertools::*;
     pub use tap::*;
 
     #[derive(Debug, StructOpt)]
