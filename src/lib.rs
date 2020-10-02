@@ -11,9 +11,6 @@ pub use structopt;
 pub use problem;
 
 pub mod prelude {
-    // Until we have !
-    pub use std::convert::Infallible;
-
     // Often used I/O
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
     pub use std::fs::{self, File};
@@ -22,6 +19,11 @@ pub mod prelude {
     // Often used data structures
     pub use std::collections::HashMap;
     pub use std::collections::HashSet;
+
+    // New std traits
+    pub use std::convert::TryFrom;
+    pub use std::convert::TryInto;
+    pub use std::convert::Infallible; // As we wait for "!"
 
     // Logging and messaging
     pub use crate::loggerv;
