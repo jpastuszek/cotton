@@ -21,6 +21,8 @@ pub mod prelude {
     pub use std::collections::HashSet;
     pub use std::borrow::Cow;
 
+    //TODO: LinearMap/Set and OrederedMap/Set
+
     // New std traits
     pub use std::convert::TryFrom;
     pub use std::convert::TryInto;
@@ -55,11 +57,12 @@ pub mod prelude {
 
     // Iterators
     pub use itertools::*;
-    pub use std::iter::*;
+    pub use std::iter::FromIterator;
+    pub use std::iter::{empty, from_fn as from_fn, once, once_with, repeat, repeat_with, successors};
 
     // Handy extensions
     pub use boolinator::Boolinator;
-    pub use tap::*;
+    pub use tap::prelude::*;
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
