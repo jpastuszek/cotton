@@ -19,6 +19,7 @@ pub mod prelude {
     // Often used data structures
     pub use std::collections::HashMap;
     pub use std::collections::HashSet;
+    pub use std::borrow::Cow;
 
     // New std traits
     pub use std::convert::TryFrom;
@@ -28,6 +29,7 @@ pub mod prelude {
     // Logging and messaging
     pub use crate::loggerv;
     pub use std::fmt::{self, Display, Debug};
+    pub use std::fmt::Write as FmtWrite; // allow write! to &mut String
     pub use log::{self, trace, debug, info, warn, error, log_enabled};
 
     // Arguments
