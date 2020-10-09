@@ -21,7 +21,8 @@ pub use chrono;
 pub mod prelude {
     // Often used I/O
     pub use std::io::{stdin, stdout, Read, Write, BufReader, BufRead, BufWriter};
-    pub use std::fs::{self, File};
+    pub use std::fs::{DirBuilder, DirEntry, File, FileType, Metadata, OpenOptions, Permissions, ReadDir, canonicalize, copy, create_dir, create_dir_all, hard_link, metadata, read, read_dir, read_link, read_to_string, remove_dir, remove_dir_all, remove_file, rename, set_permissions, symlink_metadata, write};
+
     pub use std::path::{PathBuf, Path};
 
     // Often used data structures
