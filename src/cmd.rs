@@ -39,10 +39,12 @@ where
 pub trait ExpressionExt {
     /// Run command capturing stderr and stdout.
     ///
-    /// Returns problem message containing stderr and stdout.
+    /// Returns problem message containing stderr and stdout (unless it is not UTF-8).
     fn silent(&self) -> Result<(), Problem>;
 
-    /// Run command and exit with it's exit status code if not successful.
+    /// Run command letting stderr and stdout to pass through.
+    ///
+    /// If the command finished with not successfull exit code this program will exit with that code.
     fn exec(&self) -> Result<(), Problem>;
 }
 
@@ -71,9 +73,11 @@ impl ExpressionExt for duct::Expression {
             .unchecked()
             .run()
             .problem_while_with(|| format!("while executing command {:?}", expr))?;
+
         if !out.status.success() {
             std::process::exit(out.status.code().unwrap())
         }
-        Ok(()) //TODO: !
+
+        Ok(())
     }
 }
