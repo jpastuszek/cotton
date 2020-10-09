@@ -23,7 +23,6 @@ impl DurationExt for Duration {
     }
 }
 
-pub use chrono;
 pub use chrono::prelude::*;
 
 /// Returns string in format YYYYMMDD (e.g. 20201009) based on UTC time zone

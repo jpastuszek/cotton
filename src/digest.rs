@@ -3,7 +3,7 @@ use std::path::Path;
 use std::io::prelude::*;
 use std::io::BufReader;
 use problem::*;
-pub use shaman;
+
 pub use shaman::digest::Digest;
 pub use shaman::sha1::Sha1;
 pub use shaman::sha2::Sha256;

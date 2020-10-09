@@ -7,8 +7,16 @@ mod time;
 // needed for derive to work
 pub use structopt;
 
-// there is some extra stuff in there to be used
+// Export crates to give access to unexported types
 pub use problem;
+pub use linked_hash_map;
+pub use linked_hash_set;
+pub use itertools;
+pub use boolinator;
+pub use tap;
+pub use log;
+pub use shaman;
+pub use chrono;
 
 pub mod prelude {
     // Often used I/O
@@ -22,9 +30,7 @@ pub mod prelude {
     pub use std::borrow::Cow;
 
     // Ordered HashMap/Set
-    pub use linked_hash_map;
     pub use linked_hash_map::LinkedHashMap;
-    pub use linked_hash_set;
     pub use linked_hash_set::LinkedHashSet;
 
     // New std traits
@@ -33,10 +39,9 @@ pub mod prelude {
     pub use std::convert::Infallible; // As we wait for "!"
 
     // Logging and messaging
-    pub use crate::loggerv;
     pub use std::fmt::{self, Display, Debug};
     pub use std::fmt::Write as FmtWrite; // allow write! to &mut String
-    pub use log::{self, trace, debug, info, warn, error, log_enabled};
+    pub use log::{trace, debug, info, warn, error, log_enabled};
 
     // Arguments
     pub use structopt::StructOpt;
@@ -119,7 +124,7 @@ pub mod prelude {
 
     pub fn init_logger(args: &LoggingOpt, module_paths: impl IntoIterator<Item = impl Into<String>>) {
         use log::Level;
-        use loggerv::{Logger, Output};
+        use crate::loggerv::{Logger, Output};
 
         let (base_level, verbose) = if args.errors_only {
             (Level::Error, 0)
