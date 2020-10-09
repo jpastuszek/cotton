@@ -21,7 +21,11 @@ pub mod prelude {
     pub use std::collections::HashSet;
     pub use std::borrow::Cow;
 
-    //TODO: LinearMap/Set and OrederedMap/Set
+    // Ordered HashMap/Set
+    pub use linked_hash_map;
+    pub use linked_hash_map::LinkedHashMap;
+    pub use linked_hash_set;
+    pub use linked_hash_set::LinkedHashSet;
 
     // New std traits
     pub use std::convert::TryFrom;
