@@ -24,6 +24,17 @@ impl DurationExt for Duration {
 }
 
 pub use chrono;
+pub use chrono::prelude::*;
+
+/// Returns string in format YYYYMMDD (e.g. 20201009) based on UTC time zone
+pub fn today_utc() -> String {
+    Utc::today().format("%Y%m%d").to_string()
+}
+
+/// Returns string in format YYYYMMDD (e.g. 20201009) based on local time zone
+pub fn today() -> String {
+    Local::today().format("%Y%m%d").to_string()
+}
 
 pub trait ChoronoDurationExt {
     /// Constructs Duration from &str parsed as f64 representing seconds.
