@@ -1,5 +1,5 @@
-pub use std::time::Duration;
 pub use std::num::ParseFloatError;
+pub use std::time::Duration;
 
 pub trait DurationExt {
     /// Constructs Duration from &str parsed as f64 representing seconds.

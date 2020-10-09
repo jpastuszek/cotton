@@ -120,10 +120,10 @@
 //! [log](https://crates.io/crates/log) crate for more information about its API.
 //!
 
-use log::{SetLoggerError};
-use std::io::{self, Write};
 use ansi_term::Colour;
 use chrono::Utc;
+use log::SetLoggerError;
+use std::io::{self, Write};
 
 pub const DEFAULT_COLORS: bool = true;
 pub const DEFAULT_DEBUG_COLOR: Colour = Colour::White;
@@ -187,7 +187,9 @@ impl Logger {
     /// | Trace | Grey          |
     pub fn new() -> Logger {
         Logger {
-            colors: DEFAULT_COLORS && atty::is(atty::Stream::Stdout) && atty::is(atty::Stream::Stderr),
+            colors: DEFAULT_COLORS
+                && atty::is(atty::Stream::Stdout)
+                && atty::is(atty::Stream::Stderr),
             include_level: DEFAULT_INCLUDE_LEVEL,
             include_line_numbers: DEFAULT_INCLUDE_LINE_NUMBERS,
             include_module_path: DEFAULT_INCLUDE_MODULE_PATH,
@@ -349,7 +351,7 @@ impl Logger {
     /// }
     /// ```
     pub fn no_colors(mut self) -> Self {
-        self. colors = false;
+        self.colors = false;
         self
     }
 
@@ -597,7 +599,6 @@ impl Logger {
             log::Level::Info => 2,
             log::Level::Debug => 3,
             log::Level::Trace => 4,
-
         };
         self
     }
@@ -830,7 +831,10 @@ impl Logger {
         } else {
             String::new()
         };
-        let mut tag = format!("{}{}{}{}", timestamp, level_text, module_path_text, line_text);
+        let mut tag = format!(
+            "{}{}{}{}",
+            timestamp, level_text, module_path_text, line_text
+        );
         if self.colors {
             tag = self.select_color(&level).paint(tag).to_string();
         }
@@ -845,8 +849,15 @@ impl log::Log for Logger {
 
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
-            if !self.module_path_filters.is_empty() && !self.module_path_filters.iter().any(|filter| record.module_path().unwrap_or(MODULE_PATH_UNKNOWN).starts_with(filter)) {
-                return
+            if !self.module_path_filters.is_empty()
+                && !self.module_path_filters.iter().any(|filter| {
+                    record
+                        .module_path()
+                        .unwrap_or(MODULE_PATH_UNKNOWN)
+                        .starts_with(filter)
+                })
+            {
+                return;
             }
             match self.select_output(&record.level()) {
                 Output::Stderr => {
@@ -856,8 +867,9 @@ impl log::Log for Logger {
                         self.create_tag(&record),
                         self.separator,
                         record.args()
-                    ).expect("Writing to stderr");
-                },
+                    )
+                    .expect("Writing to stderr");
+                }
                 Output::Stdout => {
                     println!(
                         "{}{}{}",
@@ -865,7 +877,7 @@ impl log::Log for Logger {
                         self.separator,
                         record.args()
                     );
-                },
+                }
             }
         }
     }
@@ -904,9 +916,9 @@ pub fn init_quiet() -> Result<(), SetLoggerError> {
 
 #[cfg(test)]
 mod tests {
-    use log;
-    use ansi_term::Colour;
     use super::*;
+    use ansi_term::Colour;
+    use log;
 
     #[test]
     fn defaults_are_correct() {

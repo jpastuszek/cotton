@@ -1,9 +1,9 @@
 use problem::*;
 
-pub use std::convert::Infallible;
-pub use std::path::Path;
 pub use duct::cmd;
-pub use std::ffi::{OsString, OsStr};
+pub use std::convert::Infallible;
+pub use std::ffi::{OsStr, OsString};
+pub use std::path::Path;
 
 /// Execute program with given path by replacing current program image.
 ///
@@ -13,12 +13,15 @@ pub fn exec<S>(program: &Path, args: &[S]) -> Result<Infallible, Problem>
 where
     S: AsRef<OsStr>,
 {
-    let name = program
-        .file_stem().ok_or_problem_with(|| format!("Program path has no file stem and no program name given: {}", program.display()))?;
+    let name = program.file_stem().ok_or_problem_with(|| {
+        format!(
+            "Program path has no file stem and no program name given: {}",
+            program.display()
+        )
+    })?;
 
     exec_with_name(program, name, args)
 }
-
 
 /// Execute program with given path by replacing current program image and using given name for
 /// argument 0 of executed program.
@@ -59,9 +62,16 @@ impl ExpressionExt for duct::Expression {
             .problem_while_with(|| format!("while executing command {:?}", expr))?;
 
         if !out.status.success() {
-            let code = out.status.code().map(|code| code.to_string()).unwrap_or("unknown".to_owned());
+            let code = out
+                .status
+                .code()
+                .map(|code| code.to_string())
+                .unwrap_or("unknown".to_owned());
             let output = String::from_utf8(out.stdout).unwrap_or("<non-UTF-8 output>".to_owned());
-            return Err(Problem::from_error(format!("command {:?} failed with status code {}:\n{}", expr, code, output)))
+            return Err(Problem::from_error(format!(
+                "command {:?} failed with status code {}:\n{}",
+                expr, code, output
+            )));
         }
 
         Ok(())
