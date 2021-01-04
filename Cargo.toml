@@ -27,6 +27,7 @@ app_dirs = { version = "2", package = "app_dirs2" }
 assert_matches = "1.3.0"
 linked-hash-map = "0.5.3"
 linked_hash_set = "0.1.4"
+filetime = "0.2.13"
 
 [target.'cfg(unix)'.dependencies]
 exec = "0.3.1"

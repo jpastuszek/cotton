@@ -8,6 +8,7 @@ mod time;
 pub use structopt;
 
 // Export crates to give access to unexported types
+pub use filetime;
 pub use boolinator;
 pub use chrono;
 pub use itertools;
@@ -29,6 +30,10 @@ pub mod prelude {
     pub use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
 
     pub use std::path::{Path, PathBuf};
+
+    // Timestamps for files
+    pub use filetime::{set_file_atime, set_file_handle_times, set_file_mtime, set_file_times,
+        set_symlink_file_times, FileTime};
 
     // Often used data structures
     pub use std::borrow::Cow;
