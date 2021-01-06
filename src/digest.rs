@@ -9,13 +9,15 @@ pub use shaman::sha1::Sha1;
 pub use shaman::sha2::Sha256;
 
 /// Calculates SHA-256 hash from list of strings and returns hex representation.
-pub fn hex_digest<'i>(
-    parts: impl IntoIterator<Item = &'i str, IntoIter = impl Iterator<Item = &'i str>>,
-) -> String {
+pub fn hex_digest<'i, S>(
+    parts: impl IntoIterator<Item = &'i S, IntoIter = impl Iterator<Item = &'i S>>,
+) -> String
+where S: AsRef<[u8]> + 'i
+{
     parts
         .into_iter()
         .fold(Sha256::new(), |mut digest, part| {
-            digest.input_str(part);
+            digest.input(part.as_ref());
             digest
         })
         .result_str()
@@ -39,4 +41,15 @@ pub fn hex_digest_file(path: impl AsRef<Path>) -> Result<String, Problem> {
     }
 
     Ok(hash.result_str())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hex_digest() {
+        assert_eq!(hex_digest(&["foo", "bar"]), "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2".to_owned());
+        assert_eq!(hex_digest(&[b"foo", b"bar"]), "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2".to_owned());
+    }
 }
