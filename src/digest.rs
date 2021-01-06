@@ -9,11 +9,9 @@ pub use shaman::sha1::Sha1;
 pub use shaman::sha2::Sha256;
 
 /// Calculates SHA-256 hash from list of strings and returns hex representation.
-pub fn hex_digest<'i, S>(
-    parts: impl IntoIterator<Item = &'i S, IntoIter = impl Iterator<Item = &'i S>>,
-) -> String
-where S: AsRef<[u8]> + 'i
-{
+pub fn hex_digest<S: AsRef<[u8]>>(
+    parts: impl IntoIterator<Item = S, IntoIter = impl Iterator<Item = S>>,
+) -> String {
     parts
         .into_iter()
         .fold(Sha256::new(), |mut digest, part| {
