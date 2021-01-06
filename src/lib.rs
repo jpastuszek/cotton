@@ -1,7 +1,6 @@
 mod app_dir;
 mod cmd;
 mod digest;
-pub mod loggerv;
 mod time;
 
 // needed for derive to work
@@ -18,6 +17,7 @@ pub use log;
 pub use problem;
 pub use shaman;
 pub use tap;
+pub mod loggerv;
 
 pub mod prelude {
     // Often used I/O

@@ -1,3 +1,6 @@
+//! NOTE: This code is taken from [loggerv](https://crates.io/crates/loggerv) crate (MIT license)
+//! and modified.
+//!
 //! A simple `io::stdout` and `io::stderr` writing `Logger` implementation from the
 //! `log` crate, using the `ansi_term` crate for colors and configured at runtime via a verbosity
 //! or at compile time with simple function calls. Designed for simple Command Line Interfaces
@@ -19,9 +22,9 @@
 //! default configuration.
 //!
 //! ```
-//!
 //! use clap;
-//! use cotton::prelude::*;
+//! use cotton::log::*;
+//! use cotton::loggerv;
 //!
 //! use clap::{Arg, App};
 //!
@@ -51,8 +54,8 @@
 //! to print what's being sent to the macros with the default configuration.
 //!
 //! ```
-//!
-//! use cotton::prelude::*;
+//! use cotton::log::*;
+//! use cotton::loggerv;
 //!
 //! use log::Level;
 //!
@@ -69,8 +72,8 @@
 //! warnings and errors with the default configuration:
 //!
 //! ```
-//!
-//! use cotton::prelude::*;
+//! use cotton::log::*;
+//! use cotton::loggerv;
 //!
 //! fn main() {
 //!     loggerv::init_quiet().unwrap();
@@ -84,9 +87,9 @@
 //! If you want to configure the output, the Builder pattern API can be used.
 //!
 //! ```
-//!
+//! use cotton::log::*;
+//! use cotton::loggerv;
 //! use clap;
-//! use cotton::prelude::*;
 //!
 //! use clap::{Arg, App};
 //!
@@ -228,7 +231,8 @@ impl Logger {
     ///
     /// ```
     ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     /// extern crate ansi_term;
     ///
     /// use log::Level;
@@ -266,8 +270,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -291,8 +295,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -313,8 +317,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -338,8 +342,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -362,8 +366,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -389,8 +393,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -412,8 +416,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -446,8 +450,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -471,8 +475,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -501,7 +505,8 @@ impl Logger {
     /// Log only messages comming from this program.
     ///
     /// ```rust
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -530,8 +535,8 @@ impl Logger {
     /// Log only messages comming from this program.
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -558,8 +563,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -577,8 +582,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -611,8 +616,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// use log::Level;
     /// use loggerv::Output;
@@ -656,8 +661,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -696,8 +701,8 @@ impl Logger {
     /// # Example
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
@@ -720,8 +725,8 @@ impl Logger {
     ///
     ///
     /// ```rust
-    ///
-    /// use cotton::prelude::*;
+    /// use cotton::log::*;
+    /// use cotton::loggerv;
     ///
     /// fn main() {
     ///     loggerv::Logger::new()
