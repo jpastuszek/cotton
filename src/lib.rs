@@ -27,9 +27,12 @@ pub mod prelude {
         set_permissions, symlink_metadata, write, DirBuilder, DirEntry, File, FileType, Metadata,
         OpenOptions, Permissions, ReadDir,
     };
-    pub use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write};
+    pub use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor};
 
     pub use std::path::{Path, PathBuf};
+
+    // Extra traits
+    pub use std::hash::Hash;
 
     // Timestamps for files
     pub use filetime::{set_file_atime, set_file_handle_times, set_file_mtime, set_file_times,
