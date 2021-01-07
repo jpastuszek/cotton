@@ -1,12 +1,40 @@
-use problem::*;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{self, BufReader};
 use std::path::Path;
+use std::fmt;
+use std::error::Error;
 
 pub use shaman::digest::Digest;
 pub use shaman::sha1::Sha1;
 pub use shaman::sha2::Sha256;
+
+#[derive(Debug)]
+pub enum FileDigestError {
+    IoError(io::Error),
+}
+
+impl fmt::Display for FileDigestError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FileDigestError::IoError(_) => write!(f, "failed to digest a file due to IO error"),
+        }
+    }
+}
+
+impl Error for FileDigestError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            FileDigestError::IoError(err) => Some(err),
+        }
+    }
+}
+
+impl From<io::Error> for FileDigestError {
+    fn from(err: io::Error) -> FileDigestError {
+        FileDigestError::IoError(err)
+    }
+}
 
 /// Calculates SHA-256 hash from list of strings and returns hex representation.
 pub fn hex_digest<S: AsRef<[u8]>>(
@@ -23,7 +51,7 @@ pub fn hex_digest<S: AsRef<[u8]>>(
 
 /// Calculates SHA-256 hash from contents of a (potentially large) file and returns hex
 /// representation.
-pub fn hex_digest_file(path: impl AsRef<Path>) -> Result<String, Problem> {
+pub fn hex_digest_file(path: impl AsRef<Path>) -> Result<String, FileDigestError> {
     let mut file = BufReader::new(File::open(path)?);
     let mut hash = Sha256::new();
 

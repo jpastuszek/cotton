@@ -1,3 +1,56 @@
+//!
+//! # Static error types
+//!
+//! When you need proper error handling (e.g. on the internal modules or when you need to act on
+//! the errors specifically) use standard way of doing this.
+//!
+//! Use enums with `Debug`, `Display` and `Error` trait implementations.
+//! Add additional `From` implementations to make `?` operator to work.
+//!
+//! If you need to add context to an error you can use [error_context](https://docs.rs/error-context) crate that is included in the prelude.
+//!
+//! ## Example custom static error type implementation
+//!
+//! ```rust
+//! use cotton::prelude::*;
+//!
+//! #[derive(Debug)]
+//! enum FileResourceError {
+//!         FileDigestError(PathBuf, FileDigestError),
+//!         NotAFileError(PathBuf),
+//! }
+//!
+//! impl Display for FileResourceError {
+//!     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//!         match self {
+//!             // Do not include chained error message in the message; let the client handle this (e.g. with Problem type)
+//!             FileResourceError::FileDigestError(path, _) => write!(f, "digest of a file {:?} could not be calculated", path),
+//!             FileResourceError::NotAFileError(path) => write!(f, "path {:?} is not a file", path),
+//!         }
+//!     }
+//! }
+//!
+//! impl Error for FileResourceError {
+//!     fn source(&self) -> Option<&(dyn Error + 'static)> {
+//!         match self {
+//!             // Chain the internal error
+//!             FileResourceError::FileDigestError(_, err) => Some(err),
+//!             FileResourceError::NotAFileError(_) => None,
+//!         }
+//!     }
+//! }
+//!
+//! // This allows for calls like `foo().wrap_error_while_with(|| self.path.clone())?` to add extra `PathBuf` context to the error
+//! impl From<ErrorContext<FileDigestError, PathBuf>> for FileResourceError {
+//!     fn from(err: ErrorContext<FileDigestError, PathBuf>) -> FileResourceError {
+//!         FileResourceError::FileDigestError(err.context, err.error)
+//!     }
+//! }
+//! ```
+//!
+
+//TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
+
 mod app_dir;
 mod cmd;
 mod digest;
@@ -27,7 +80,7 @@ pub mod prelude {
         set_permissions, symlink_metadata, write, DirBuilder, DirEntry, File, FileType, Metadata,
         OpenOptions, Permissions, ReadDir,
     };
-    pub use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor};
+    pub use std::io::{self, stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor};
 
     pub use std::path::{Path, PathBuf};
 
@@ -66,6 +119,7 @@ pub mod prelude {
     pub use problem::prelude::*;
     pub use problem::result::FinalResult;
     pub use problem::result::Result as PResult;
+    pub use error_context::prelude::*;
 
     // Running commands
     pub use super::cmd::*;
