@@ -61,6 +61,7 @@ pub mod prelude {
     pub use structopt::StructOpt;
 
     // Error handling
+    pub use std::error::Error;
     pub use assert_matches::assert_matches;
     pub use problem::prelude::*;
     pub use problem::result::FinalResult;
