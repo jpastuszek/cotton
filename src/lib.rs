@@ -84,8 +84,9 @@ pub mod prelude {
 
     pub use std::path::{Path, PathBuf};
 
-    // Extra traits
+    // Extra traits and stuff
     pub use std::hash::Hash;
+    pub use std::marker::PhantomData;
 
     // Timestamps for files
     pub use filetime::{set_file_atime, set_file_handle_times, set_file_mtime, set_file_times,
