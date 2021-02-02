@@ -71,6 +71,7 @@ pub use problem;
 pub use shaman;
 pub use tap;
 pub mod loggerv;
+pub use duct;
 
 pub mod prelude {
     // Often used I/O
