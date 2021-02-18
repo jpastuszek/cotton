@@ -1,3 +1,8 @@
+//! # Error context
+//!
+//! Generally libraries should not add context to the errors as it may be considered sensitive for
+//! some uses.
+//! In this library context (like file paths) will be provided by default.
 //!
 //! # Static error types
 //!
@@ -177,6 +182,33 @@ pub mod prelude {
         }
     }
 
+    #[derive(Debug)]
+    pub enum FileIoError {
+        IoError(PathBuf, io::Error),
+    }
+
+    impl Display for FileIoError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                FileIoError::IoError(path, _) => write!(f, "I/O error while reading file {:?}", path),
+            }
+        }
+    }
+
+    impl Error for FileIoError {
+        fn source(&self) -> Option<&(dyn Error + 'static)> {
+            match self {
+                FileIoError::IoError(_, err) => Some(err),
+            }
+        }
+    }
+
+    impl From<ErrorContext<io::Error, PathBuf>> for FileIoError {
+        fn from(err: ErrorContext<io::Error, PathBuf>) -> FileIoError {
+            FileIoError::IoError(err.context, err.error)
+        }
+    }
+
     pub fn read_stdin() -> String {
         let mut buffer = String::new();
         stdin()
@@ -197,6 +229,32 @@ pub mod prelude {
         BufReader::new(stdin())
             .lines()
             .or_failed_to("read UTF-8 lines from stdin")
+    }
+
+    /// Read content of all files as string.
+    pub fn read_all(paths: impl IntoIterator<Item = impl AsRef<Path>>) -> Result<String, FileIoError> {
+        let mut string = String::new();
+
+        for path in paths {
+            let path = path.as_ref();
+            let mut file = File::open(path).wrap_error_while_with(|| path.into())?;
+            file.read_to_string(&mut string).wrap_error_while_with(|| path.into())?;
+        }
+
+        Ok(string)
+    }
+
+    /// Read content of all files as bytes.
+    pub fn read_all_bytes(paths: impl IntoIterator<Item = impl AsRef<Path>>) -> Result<Vec<u8>, FileIoError> {
+        let mut bytes = Vec::new();
+
+        for path in paths {
+            let path = path.as_ref();
+            let mut file = File::open(path).wrap_error_while_with(|| path.into())?;
+            file.read_to_end(&mut bytes).wrap_error_while_with(|| path.into())?;
+        }
+
+        Ok(bytes)
     }
 
     pub fn init_logger(
