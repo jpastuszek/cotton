@@ -77,18 +77,24 @@ pub use shaman;
 pub use tap;
 pub mod loggerv;
 pub use duct;
+pub use file_mode;
 
 pub mod prelude {
     // Often used I/O
     pub use std::fs::{
         canonicalize, copy, create_dir, create_dir_all, hard_link, metadata, read, read_dir,
         read_link, read_to_string, remove_dir, remove_dir_all, remove_file, rename,
-        set_permissions, symlink_metadata, write, DirBuilder, DirEntry, File, FileType, Metadata,
+        set_permissions, symlink_metadata, write, DirBuilder, DirEntry, File, Metadata,
         OpenOptions, Permissions, ReadDir,
     };
     pub use std::io::{self, stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor};
 
     pub use std::path::{Path, PathBuf};
+
+    // filesystem
+    pub use file_mode::{ModeParseError, Mode, User, FileType, ProtectionBit, Protection, SpecialBit, Special};
+    #[cfg(target_family = "unix")]
+    pub use file_mode::{ModeError, ModePath, ModeFile, SetMode};
 
     // Extra traits and stuff
     pub use std::hash::Hash;
