@@ -55,6 +55,7 @@
 //!
 
 //TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
+//TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
 
 mod app_dir;
 mod cmd;
@@ -121,7 +122,7 @@ pub mod prelude {
     // Logging and messaging
     pub use log::{debug, error, info, log_enabled, trace, warn};
     pub use std::fmt::Write as FmtWrite; // allow write! to &mut String
-    pub use std::fmt::{self, Debug, Display};
+    pub use std::fmt::{self, Debug, Display}; //TODO: having both Debug and Display makes self.0.fmt(f) confused
 
     // Arguments
     pub use structopt::StructOpt;
