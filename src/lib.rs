@@ -74,6 +74,7 @@ pub use linked_hash_map;
 pub use linked_hash_set;
 pub use log;
 pub use problem;
+pub use error_context;
 pub use shaman;
 pub use tap;
 pub mod loggerv;
@@ -130,10 +131,14 @@ pub mod prelude {
     // Error handling
     pub use std::error::Error;
     pub use assert_matches::assert_matches;
-    pub use problem::prelude::*;
-    pub use problem::result::FinalResult;
-    pub use problem::result::Result as PResult;
-    pub use error_context::prelude::*;
+    pub use ::problem::prelude::{problem, in_context_of, in_context_of_with, FailedTo, FailedToIter, Fatal, FatalProblem,
+        MapProblem, MapProblemOr, OkOrProblem, Problem, ProblemWhile, OkOrLog, OkOrLogIter};
+    pub use ::problem::result::FinalResult;
+    pub use ::problem::result::Result as PResult;
+    pub use ::error_context::{
+        in_context_of as in_error_context_of, in_context_of_with as in_error_context_of_with, wrap_in_context_of,
+        wrap_in_context_of_with, ErrorContext, ErrorNoContext, MapErrorNoContext, ResultErrorWhile,
+        ResultErrorWhileWrap, ToErrorNoContext, WithContext, WrapContext};
 
     // Running commands
     pub use super::cmd::*;
@@ -305,5 +310,20 @@ pub mod prelude {
         logger.level(true).init().or_failed_to("init logger");
 
         ::problem::format_panic_to_error_log();
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::prelude::*;
+
+    #[test]
+    #[should_panic(expected = "Failed to baz due to: while bar got error caused by: foo")]
+    fn test_problem() {
+        in_context_of("bar", || {
+            problem!("foo")?;
+            Ok(())
+        }).or_failed_to("baz");
     }
 }
