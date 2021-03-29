@@ -123,7 +123,7 @@ pub mod prelude {
     // Logging and messaging
     pub use log::{debug, error, info, log_enabled, trace, warn};
     pub use std::fmt::Write as FmtWrite; // allow write! to &mut String
-    pub use std::fmt::{self, Display};
+    pub use std::fmt::{self, Display, Debug};
 
     // Arguments
     pub use structopt::StructOpt;
