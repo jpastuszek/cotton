@@ -80,6 +80,8 @@ pub use tap;
 pub mod loggerv;
 pub use duct;
 pub use file_mode;
+#[cfg(target_family = "unix")]
+pub use file_owner;
 
 pub mod prelude {
     // Often used I/O
@@ -97,6 +99,8 @@ pub mod prelude {
     pub use file_mode::{ModeParseError, Mode, User, FileType, ProtectionBit, Protection, SpecialBit, Special};
     #[cfg(target_family = "unix")]
     pub use file_mode::{ModeError, ModePath, ModeFile, SetMode};
+    #[cfg(target_family = "unix")]
+    pub use file_owner::{PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group};
 
     // Extra traits and stuff
     pub use std::hash::Hash;
