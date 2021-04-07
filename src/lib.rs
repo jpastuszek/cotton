@@ -163,7 +163,8 @@ pub mod prelude {
 
     // Handy extensions
     pub use boolinator::Boolinator;
-    pub use tap::prelude::*;
+    pub use tap::prelude::{Conv, Tap, TapFallible, TapOptional, TryConv};
+    //TODO: pub use tap::prelude::{Pipe}; - colides with duct::Expression.pipe!
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
