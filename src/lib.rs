@@ -55,6 +55,7 @@
 //!
 
 //TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
+//TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
 
 mod app_dir;
 mod cmd;
@@ -73,11 +74,14 @@ pub use linked_hash_map;
 pub use linked_hash_set;
 pub use log;
 pub use problem;
+pub use error_context;
 pub use shaman;
 pub use tap;
 pub mod loggerv;
 pub use duct;
 pub use file_mode;
+#[cfg(target_family = "unix")]
+pub use file_owner;
 
 pub mod prelude {
     // Often used I/O
@@ -95,6 +99,8 @@ pub mod prelude {
     pub use file_mode::{ModeParseError, Mode, User, FileType, ProtectionBit, Protection, SpecialBit, Special};
     #[cfg(target_family = "unix")]
     pub use file_mode::{ModeError, ModePath, ModeFile, SetMode};
+    #[cfg(target_family = "unix")]
+    pub use file_owner::{PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group};
 
     // Extra traits and stuff
     pub use std::hash::Hash;
@@ -121,7 +127,7 @@ pub mod prelude {
     // Logging and messaging
     pub use log::{debug, error, info, log_enabled, trace, warn};
     pub use std::fmt::Write as FmtWrite; // allow write! to &mut String
-    pub use std::fmt::{self, Debug, Display};
+    pub use std::fmt::{self, Display, Debug};
 
     // Arguments
     pub use structopt::StructOpt;
@@ -129,10 +135,14 @@ pub mod prelude {
     // Error handling
     pub use std::error::Error;
     pub use assert_matches::assert_matches;
-    pub use problem::prelude::*;
-    pub use problem::result::FinalResult;
-    pub use problem::result::Result as PResult;
-    pub use error_context::prelude::*;
+    pub use ::problem::prelude::{problem, in_context_of, in_context_of_with, FailedTo, FailedToIter, Fatal, FatalProblem,
+        MapProblem, MapProblemOr, OkOrProblem, Problem, ProblemWhile, OkOrLog, OkOrLogIter};
+    pub use ::problem::result::FinalResult;
+    pub use ::problem::result::Result as PResult;
+    pub use ::error_context::{
+        in_context_of as in_error_context_of, in_context_of_with as in_error_context_of_with, wrap_in_context_of,
+        wrap_in_context_of_with, ErrorContext, ErrorNoContext, MapErrorNoContext, ResultErrorWhile,
+        ResultErrorWhileWrap, ToErrorNoContext, WithContext, WrapContext};
 
     // Running commands
     pub use super::cmd::*;
@@ -153,7 +163,8 @@ pub mod prelude {
 
     // Handy extensions
     pub use boolinator::Boolinator;
-    pub use tap::prelude::*;
+    pub use tap::prelude::{Conv, Tap, TapFallible, TapOptional, TryConv};
+    //TODO: pub use tap::prelude::{Pipe}; - colides with duct::Expression.pipe!
 
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
@@ -304,5 +315,20 @@ pub mod prelude {
         logger.level(true).init().or_failed_to("init logger");
 
         ::problem::format_panic_to_error_log();
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::prelude::*;
+
+    #[test]
+    #[should_panic(expected = "Failed to baz due to: while bar got error caused by: foo")]
+    fn test_problem() {
+        in_context_of("bar", || {
+            problem!("foo")?;
+            Ok(())
+        }).or_failed_to("baz");
     }
 }

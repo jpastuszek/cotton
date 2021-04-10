@@ -1,6 +1,6 @@
 [package]
 name = "cotton"
-version = "0.0.15-alpha.0"
+version = "0.0.16-alpha.0"
 authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
 description = "A prelude with crates, types and functions useful for writing CLI tools."
@@ -12,7 +12,7 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [dependencies]
-problem = "5.2.1"
+problem = "5.3.0"
 error-context = "0.1.2"
 structopt = "0.3.2"
 log = { version = "0.4.8", features = ["std"] }
@@ -33,6 +33,7 @@ file-mode = "0.1.2"
 
 [target.'cfg(unix)'.dependencies]
 exec = "0.3.1"
+file-owner = "0.1.0"
 
 [dev-dependencies]
 clap = "2.33.0"
