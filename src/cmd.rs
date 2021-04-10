@@ -40,15 +40,21 @@ where
 }
 
 pub trait ExpressionExt {
-    /// Run command capturing stderr and stdout.
+    /// Runs command capturing stderr and stdout.
     ///
     /// Returns problem message containing stderr and stdout (unless it is not UTF-8).
     fn silent(&self) -> Result<(), Problem>;
 
-    /// Run command letting stderr and stdout to pass through.
+    /// Runs command letting stderr and stdout to pass through.
     ///
     /// If the command finished with not successfull exit code this program will exit with that code.
     fn exec(&self) -> Result<(), Problem>;
+
+    /// Runs command capturing stdout and exit code.
+    ///
+    /// If the command finishes with without exit code (e.g. via signal) and "aborted" error is
+    /// returned. It will also fail if stdout can't be converted to UTF-8 string.
+    fn read_with_status(&self) -> Result<(String, i32), Problem>;
 }
 
 impl ExpressionExt for duct::Expression {
@@ -89,5 +95,16 @@ impl ExpressionExt for duct::Expression {
         }
 
         Ok(())
+    }
+
+    fn read_with_status(&self) -> Result<(String, i32), Problem> {
+        let expr = self.clone();
+        let out = self
+            .stdout_capture()
+            .unchecked()
+            .run()
+            .problem_while_with(|| format!("while executing command {:?}", expr))?;
+
+        Ok((String::from_utf8(out.stdout)?, out.status.code().ok_or_problem("aborted")?))
     }
 }
