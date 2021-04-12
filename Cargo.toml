@@ -30,6 +30,7 @@ linked-hash-map = "0.5.3"
 linked_hash_set = "0.1.4"
 filetime = "0.2.13"
 file-mode = "0.1.2"
+scopeguard = "1.1.0"
 
 [target.'cfg(unix)'.dependencies]
 exec = "0.3.1"

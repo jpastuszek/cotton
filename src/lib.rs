@@ -82,6 +82,7 @@ pub use duct;
 pub use file_mode;
 #[cfg(target_family = "unix")]
 pub use file_owner;
+pub use scopeguard;
 
 pub mod prelude {
     // Often used I/O
@@ -160,6 +161,9 @@ pub mod prelude {
     pub use itertools::*;
     pub use std::iter::FromIterator;
     pub use std::iter::{empty, from_fn, once, once_with, repeat, repeat_with, successors};
+
+    // RAII patterns
+    pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
 
     // Handy extensions
     pub use boolinator::Boolinator;
