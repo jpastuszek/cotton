@@ -83,6 +83,10 @@ pub use file_mode;
 #[cfg(target_family = "unix")]
 pub use file_owner;
 pub use scopeguard;
+#[cfg(target_family = "unix")]
+pub use signal_hook;
+#[cfg(target_family = "unix")]
+pub use uninterruptible;
 
 pub mod prelude {
     // Often used I/O
@@ -164,6 +168,9 @@ pub mod prelude {
 
     // RAII patterns
     pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
+
+    // Signals
+    pub use uninterruptible::Uninterruptible;
 
     // Handy extensions
     pub use boolinator::Boolinator;
