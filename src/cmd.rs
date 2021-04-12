@@ -50,11 +50,21 @@ pub trait ExpressionExt {
     /// If the command finished with not successfull exit code this program will exit with that code.
     fn exec(&self) -> Result<(), Problem>;
 
+    /// Runs command returning its exit code.
+    ///
+    /// If the command finishes without exit code (e.g. via signal) an "aborted" error is returned.
+    fn run_with_status(&self) -> Result<i32, Problem>;
+
     /// Runs command capturing stdout and exit code.
     ///
-    /// If the command finishes with without exit code (e.g. via signal) and "aborted" error is
-    /// returned. It will also fail if stdout can't be converted to UTF-8 string.
+    /// If the command finishes without exit code (e.g. via signal) an "aborted" error is returned.
+    /// It will also fail if captured output can't be converted to UTF-8 string.
     fn read_with_status(&self) -> Result<(String, i32), Problem>;
+
+    /// Runs command capturing stdout and exit code.
+    ///
+    /// If the command finishes without exit code (e.g. via signal) an "aborted" error is returned.
+    fn read_bytes_with_status(&self) -> Result<(Vec<u8>, i32), Problem>;
 }
 
 impl ExpressionExt for duct::Expression {
@@ -97,6 +107,16 @@ impl ExpressionExt for duct::Expression {
         Ok(())
     }
 
+    fn run_with_status(&self) -> Result<i32, Problem> {
+        let expr = self.clone();
+        let out = self
+            .unchecked()
+            .run()
+            .problem_while_with(|| format!("while executing command {:?}", expr))?;
+
+        Ok(out.status.code().ok_or_problem("aborted")?)
+    }
+
     fn read_with_status(&self) -> Result<(String, i32), Problem> {
         let expr = self.clone();
         let out = self
@@ -106,5 +126,16 @@ impl ExpressionExt for duct::Expression {
             .problem_while_with(|| format!("while executing command {:?}", expr))?;
 
         Ok((String::from_utf8(out.stdout)?, out.status.code().ok_or_problem("aborted")?))
+    }
+
+    fn read_bytes_with_status(&self) -> Result<(Vec<u8>, i32), Problem> {
+        let expr = self.clone();
+        let out = self
+            .stdout_capture()
+            .unchecked()
+            .run()
+            .problem_while_with(|| format!("while executing command {:?}", expr))?;
+
+        Ok((out.stdout, out.status.code().ok_or_problem("aborted")?))
     }
 }
