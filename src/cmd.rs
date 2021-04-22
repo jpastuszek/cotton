@@ -64,7 +64,7 @@ pub trait ExpressionExt {
     /// Runs command capturing stdout and exit code.
     ///
     /// If the command finishes without exit code (e.g. via signal) an "aborted" error is returned.
-    fn read_bytes_with_status(&self) -> Result<(Vec<u8>, i32), Problem>;
+    fn read_with_status_bytes(&self) -> Result<(Vec<u8>, i32), Problem>;
 }
 
 impl ExpressionExt for duct::Expression {
@@ -118,17 +118,12 @@ impl ExpressionExt for duct::Expression {
     }
 
     fn read_with_status(&self) -> Result<(String, i32), Problem> {
-        let expr = self.clone();
-        let out = self
-            .stdout_capture()
-            .unchecked()
-            .run()
-            .problem_while_with(|| format!("while executing command {:?}", expr))?;
+        let (out, code) = self.read_with_status_bytes()?;
 
-        Ok((String::from_utf8(out.stdout)?, out.status.code().ok_or_problem("aborted")?))
+        Ok((String::from_utf8(out)?, code))
     }
 
-    fn read_bytes_with_status(&self) -> Result<(Vec<u8>, i32), Problem> {
+    fn read_with_status_bytes(&self) -> Result<(Vec<u8>, i32), Problem> {
         let expr = self.clone();
         let out = self
             .stdout_capture()
