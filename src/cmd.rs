@@ -134,3 +134,38 @@ impl ExpressionExt for duct::Expression {
         Ok((out.stdout, out.status.code().ok_or_problem("aborted")?))
     }
 }
+
+#[derive(Debug, Default)]
+pub struct CmdArgs(Vec<OsString>);
+
+impl CmdArgs {
+    pub fn new() -> CmdArgs {
+        Default::default()
+    }
+
+    pub fn with(mut self, arg: impl Into<OsString>) -> Self {
+        self.push(arg);
+        self
+    }
+
+    pub fn with_append(mut self, args: CmdArgs) -> Self {
+        self.append(args);
+        self
+    }
+
+    pub fn push(&mut self, arg: impl Into<OsString>) {
+        self.0.push(arg.into())
+    }
+
+    pub fn append(&mut self, args: CmdArgs) {
+        self.0.extend(args.0.into_iter());
+    }
+
+	pub fn into_expression(self, command: impl Into<OsString> + duct::IntoExecutablePath) -> duct::Expression {
+        cmd(command, self.0)
+	}
+
+    pub fn into_inner(self) -> Vec<OsString> {
+        self.0
+    }
+}
