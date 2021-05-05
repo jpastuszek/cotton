@@ -66,6 +66,7 @@ mod time;
 pub use structopt;
 
 // Export crates to give access to unexported types
+pub use directories;
 pub use filetime;
 pub use boolinator;
 pub use chrono;
