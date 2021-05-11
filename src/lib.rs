@@ -102,11 +102,11 @@ pub mod prelude {
     pub use std::path::{Path, PathBuf};
 
     // filesystem
-    pub use file_mode::{ModeParseError, Mode, User, FileType, ProtectionBit, Protection, SpecialBit, Special};
+    pub use file_mode::{ModeParseError, Mode as FileMode, User, FileType, ProtectionBit, Protection, SpecialBit, Special};
     #[cfg(target_family = "unix")]
     pub use file_mode::{ModeError, ModePath, ModeFile, SetMode};
     #[cfg(target_family = "unix")]
-    pub use file_owner::{PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group};
+    pub use file_owner::{PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group, Group as FileGroup, Owner as FileOwner};
 
     // Extra traits and stuff
     pub use std::hash::Hash;
