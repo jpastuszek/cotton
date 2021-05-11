@@ -106,7 +106,7 @@ pub mod prelude {
     #[cfg(target_family = "unix")]
     pub use file_mode::{ModeError, ModePath, ModeFile, SetMode};
     #[cfg(target_family = "unix")]
-    pub use file_owner::{PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group, Group as FileGroup, Owner as FileOwner};
+    pub use file_owner::{FileOwnerError, PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group, Group as FileGroup, Owner as FileOwner};
 
     // Extra traits and stuff
     pub use std::hash::Hash;
