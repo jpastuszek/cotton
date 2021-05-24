@@ -4,6 +4,7 @@ pub use duct::cmd;
 pub use std::convert::Infallible;
 pub use std::ffi::{OsStr, OsString};
 pub use std::path::Path;
+pub use std::fmt::{self, Display};
 
 /// Execute program with given path by replacing current program image.
 ///
@@ -135,7 +136,7 @@ impl ExpressionExt for duct::Expression {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CmdArgs(Vec<OsString>);
 
 impl CmdArgs {
@@ -165,7 +166,17 @@ impl CmdArgs {
         cmd(command, self.0)
 	}
 
+    pub fn as_expression(&self, command: impl Into<OsString> + duct::IntoExecutablePath) -> duct::Expression {
+        cmd(command, self.0.as_slice())
+    }
+
     pub fn into_inner(self) -> Vec<OsString> {
         self.0
+    }
+}
+
+impl Display for CmdArgs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
