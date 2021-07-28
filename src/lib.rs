@@ -80,6 +80,7 @@ pub use shaman;
 pub use tap;
 pub mod loggerv;
 pub use duct;
+pub use maybe_string;
 pub use file_mode;
 #[cfg(target_family = "unix")]
 pub use file_owner;
@@ -120,6 +121,9 @@ pub mod prelude {
     pub use std::borrow::Cow;
     pub use std::collections::HashMap;
     pub use std::collections::HashSet;
+
+    // String helpers
+    pub use maybe_string::{MaybeString, MaybeStr};
 
     // Ordered HashMap/Set
     pub use linked_hash_map::LinkedHashMap;

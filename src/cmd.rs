@@ -6,6 +6,28 @@ pub use std::ffi::{OsStr, OsString};
 pub use std::path::Path;
 pub use std::fmt::{self, Display};
 
+use maybe_string::MaybeString;
+use boolinator::Boolinator;
+use std::process::ExitStatus;
+
+#[cfg(target_family = "unix")]
+fn format_status_error(status: ExitStatus, stderr: Vec<u8>) -> Problem {
+    use std::os::unix::process::ExitStatusExt;
+    match (status.code(), status.signal()) {
+        (Some(code), _) => Problem::from_error(format!("Commend exited with status code: {}; errors:\n{}", code, MaybeString(stderr))),
+        (_, Some(signal)) => Problem::from_error(format!("Commend exited with on signal: {}; errors:\n{}", signal, MaybeString(stderr))),
+        _ => Problem::from_error(format!("Commend was aborted; errors:\n{}", MaybeString(stderr))),
+    }
+}
+
+#[cfg(not(target_family = "unix"))]
+fn format_status_error(status: ExitStatus, stderr: Vec<u8>) -> Problem {
+    match status.code() {
+        Some(code) => Problem::from_error(format!("Commend exited with status code: {}; errors:\n{}", code, MaybeString(stderr))),
+        _ => Problem::from_error(format!("Commend was aborted; errors:\n{}", MaybeString(stderr))),
+    }
+}
+
 /// Execute program with given path by replacing current program image.
 ///
 /// Program name is taken from file stem of program path.
@@ -66,6 +88,12 @@ pub trait ExpressionExt {
     ///
     /// If the command finishes without exit code (e.g. via signal) an "aborted" error is returned.
     fn read_with_status_bytes(&self) -> Result<(Vec<u8>, i32), Problem>;
+
+    /// Runs a command capturing stdout.
+    ///
+    /// If the command finished with nonnot successfull exit code the captured stderr is reportes
+    /// as part of the error message.
+    fn read_with_errors(&self) -> Result<Vec<u8>, Problem>;
 }
 
 impl ExpressionExt for duct::Expression {
@@ -133,6 +161,24 @@ impl ExpressionExt for duct::Expression {
             .problem_while_with(|| format!("while executing command {:?}", expr))?;
 
         Ok((out.stdout, out.status.code().ok_or_problem("aborted")?))
+    }
+
+    fn read_with_errors(&self) -> Result<Vec<u8>, Problem> {
+        let expr = self.clone();
+        let out = self
+            .stdout_capture()
+            .stderr_capture()
+            .unchecked()
+            .run()?;
+
+        let stdout = out.stdout;
+        let stderr = out.stderr;
+        let status = out.status;
+
+        status
+            .success()
+            .as_result_from(|| stdout, || format_status_error(status, stderr))
+            .problem_while_with(|| format!("while executing command {:?}", expr))
     }
 }
 

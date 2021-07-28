@@ -33,6 +33,7 @@ scopeguard = "1.1.0"
 uninterruptible = "0.1.0"
 signal-hook = "0.3.8"
 directories = "3.0.2"
+maybe-string = "0.1.0"
 
 [target.'cfg(unix)'.dependencies]
 exec = "0.3.1"
