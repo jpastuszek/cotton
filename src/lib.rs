@@ -185,8 +185,17 @@ pub mod prelude {
     //TODO: pub use tap::prelude::{Pipe}; - colides with duct::Expression.pipe!
 
     // Terminal
-    pub use atty;
-    pub use ansi_term::{Colour, Style, ANSIString, ANSIStrings};
+    pub use ansi_term::{Colour, Style, ANSIString, ANSIStrings, unstyle};
+
+    /// Returns true if stdout is a TTY
+    pub fn stdout_is_tty() -> bool {
+        atty::is(atty::Stream::Stdout)
+    }
+
+    /// Returns true if stderr is a TTY
+    pub fn stderr_is_tty() -> bool {
+        atty::is(atty::Stream::Stdout)
+    }
 
     // Logging
     #[derive(Debug, StructOpt)]
