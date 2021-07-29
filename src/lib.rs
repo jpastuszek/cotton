@@ -73,6 +73,8 @@ pub use chrono;
 pub use itertools;
 pub use linked_hash_map;
 pub use linked_hash_set;
+pub use ansi_term;
+pub use atty;
 pub use log;
 pub use problem;
 pub use error_context;
@@ -182,6 +184,11 @@ pub mod prelude {
     pub use tap::prelude::{Conv, Tap, TapFallible, TapOptional, TryConv};
     //TODO: pub use tap::prelude::{Pipe}; - colides with duct::Expression.pipe!
 
+    // Terminal
+    pub use atty;
+    pub use ansi_term::{Colour, Style, ANSIString, ANSIStrings};
+
+    // Logging
     #[derive(Debug, StructOpt)]
     pub struct LoggingOpt {
         /// Verbose mode (-v for INFO, -vv for DEBUG, -vvv for TRACE, -vvvv TRACE all modules)
