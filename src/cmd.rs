@@ -226,3 +226,55 @@ impl Display for CmdArgs {
         write!(f, "{:?}", self.0)
     }
 }
+
+/// Collect arguments to string escaping them as shellwords
+#[derive(Debug, Default)]
+pub struct ShellArgs(String);
+
+impl ShellArgs {
+    pub fn new() -> ShellArgs {
+        Default::default()
+    }
+
+    pub fn push(&mut self, arg: &str) {
+        if !self.0.is_empty() {
+            self.0.push_str(" ");
+        }
+        self.0.push_str(&shellwords::escape(arg));
+    }
+
+    pub fn push_unescaped(&mut self, arg: &str) {
+        if !self.0.is_empty() {
+            self.0.push_str(" ");
+        }
+        self.0.push_str(arg);
+    }
+
+    pub fn with(mut self, arg: &str) -> Self {
+        self.push(arg);
+        self
+    }
+
+    pub fn with_unescaped(mut self, arg: &str) -> Self {
+        self.push_unescaped(arg);
+        self
+    }
+
+    pub fn with_pair(mut self, arg: &str, value: &str) -> Self {
+        self.push(arg);
+        self.push(value);
+        self
+    }
+
+    pub fn with_pairs<'s>(mut self, args: impl IntoIterator<Item = (&'s str, &'s str)>) -> Self {
+        for (k, v) in args {
+            self.push(k);
+            self.push(v);
+        }
+        self
+    }
+
+    pub fn unwrap(self) -> String {
+        self.0
+    }
+}

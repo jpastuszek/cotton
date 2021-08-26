@@ -84,6 +84,7 @@ pub mod loggerv;
 pub use duct;
 pub use maybe_string;
 pub use file_mode;
+pub use shellwords;
 #[cfg(target_family = "unix")]
 pub use file_owner;
 pub use scopeguard;
@@ -173,6 +174,7 @@ pub mod prelude {
 
     // Running commands
     pub use super::cmd::*;
+    pub use ::shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
 
     // Content hashing
     pub use super::digest::*;
