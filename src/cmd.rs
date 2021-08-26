@@ -250,6 +250,17 @@ impl ShellArgs {
         self.0.push_str(arg);
     }
 
+    pub fn push_pair(&mut self, arg: &str, value: &str) {
+        self.push(arg);
+        self.push(value);
+    }
+
+    pub fn push_pairs<'s>(&mut self, args: impl IntoIterator<Item = (&'s str, &'s str)>) {
+        for (k, v) in args {
+            self.push_pair(k, v);
+        }
+    }
+
     pub fn with(mut self, arg: &str) -> Self {
         self.push(arg);
         self
@@ -261,16 +272,12 @@ impl ShellArgs {
     }
 
     pub fn with_pair(mut self, arg: &str, value: &str) -> Self {
-        self.push(arg);
-        self.push(value);
+        self.push_pair(arg, value);
         self
     }
 
     pub fn with_pairs<'s>(mut self, args: impl IntoIterator<Item = (&'s str, &'s str)>) -> Self {
-        for (k, v) in args {
-            self.push(k);
-            self.push(v);
-        }
+        self.push_pairs(args);
         self
     }
 
