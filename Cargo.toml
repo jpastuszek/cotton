@@ -35,6 +35,7 @@ signal-hook = "0.3.8"
 directories = "3.0.2"
 maybe-string = "0.1.0"
 shellwords = "1.1.0"
+secrecy = { version = "0.8.0", features = ["alloc"] }
 
 [target.'cfg(unix)'.dependencies]
 exec = "0.3.1"

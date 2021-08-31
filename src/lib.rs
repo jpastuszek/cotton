@@ -85,6 +85,7 @@ pub use duct;
 pub use maybe_string;
 pub use file_mode;
 pub use shellwords;
+pub use secrecy;
 #[cfg(target_family = "unix")]
 pub use file_owner;
 pub use scopeguard;
@@ -99,9 +100,12 @@ pub mod prelude {
         canonicalize, copy, create_dir, create_dir_all, hard_link, metadata, read, read_dir,
         read_link, read_to_string, remove_dir, remove_dir_all, remove_file, rename,
         set_permissions, symlink_metadata, write, DirBuilder, DirEntry, File, Metadata,
-        OpenOptions, Permissions, ReadDir,
+        OpenOptions, Permissions, ReadDir
     };
-    pub use std::io::{self, stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor};
+    pub use std::io::{
+        self, stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor,
+        Seek, SeekFrom
+    };
 
     pub use std::path::{Path, PathBuf};
 
@@ -251,12 +255,14 @@ pub mod prelude {
     #[derive(Debug)]
     pub enum FileIoError {
         IoError(PathBuf, io::Error),
+        Utf8Error(PathBuf, std::str::Utf8Error),
     }
 
     impl Display for FileIoError {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
                 FileIoError::IoError(path, _) => write!(f, "I/O error while reading file {:?}", path),
+                FileIoError::Utf8Error(path, _) => write!(f, "failed to decode content of file {:?} as UTF-8 encoded string", path),
             }
         }
     }
@@ -265,6 +271,7 @@ pub mod prelude {
         fn source(&self) -> Option<&(dyn Error + 'static)> {
             match self {
                 FileIoError::IoError(_, err) => Some(err),
+                FileIoError::Utf8Error(_, err) => Some(err),
             }
         }
     }
@@ -272,6 +279,12 @@ pub mod prelude {
     impl From<ErrorContext<io::Error, PathBuf>> for FileIoError {
         fn from(err: ErrorContext<io::Error, PathBuf>) -> FileIoError {
             FileIoError::IoError(err.context, err.error)
+        }
+    }
+
+    impl From<ErrorContext<std::str::Utf8Error, PathBuf>> for FileIoError {
+        fn from(err: ErrorContext<std::str::Utf8Error, PathBuf>) -> FileIoError {
+            FileIoError::Utf8Error(err.context, err.error)
         }
     }
 
@@ -321,6 +334,56 @@ pub mod prelude {
         }
 
         Ok(bytes)
+    }
+
+    // Secret handling
+    pub use secrecy::{Secret, SecretString, SecretVec, SecretBox, Zeroize};
+
+    /// Reads first line of the file as a secret string.
+    pub fn read_secret(path: &Path) -> Result<SecretString, FileIoError> {
+        _read_secret_bytes(path, |vec|
+            match String::from_utf8(vec) {
+                Ok(s) => Ok(SecretString::from(s)),
+                Err(err) => {
+                    let utf8_err = err.utf8_error();
+                    err.into_bytes().zeroize();
+                    Err(utf8_err.wrap_context(path.to_owned()))
+                }
+            }
+        )
+    }
+
+    /// Reads first line of the file as a secret bytes.
+    pub fn read_secret_bytes(path: &Path) -> Result<SecretVec<u8>, FileIoError> {
+        _read_secret_bytes(path, |v| -> Result<_, FileIoError> { Ok(v.into()) })
+    }
+
+    // Note: avoid Vec realloctions so secret is not left unzeroed
+    fn _read_secret_bytes<E, S, ES, W>(path: &Path, wrap: W) -> Result<ES, FileIoError>
+        where
+            E: Into<FileIoError>,
+            ES: secrecy::ExposeSecret<S>,
+            W: FnOnce(Vec<u8>) -> Result<ES, E>
+    {
+        wrap_in_context_of_with(|| path.to_owned(), || -> Result<_, io::Error> {
+            let mut file = File::open(path)?;
+
+            // see how much data we need to prealocate
+            let len = (&mut file)
+                .bytes()
+                .take_while(|b| b.as_ref().map(|b| *b != b'\n').unwrap_or(true))
+                .try_fold(0usize, |len, b| b.map(|_| len + 1))?;
+            file.seek(SeekFrom::Start(0))?;
+
+            // resize vec to the length of the secret and read it in
+            let mut out = Vec::new();
+            out.resize(len, 0);
+            file.read_exact(&mut out)?;
+
+            Ok(out)
+        })
+        .map_err(Into::into)
+        .and_then(|out| wrap(out).map_err(|err| err.into()))
     }
 
     pub fn init_logger(
