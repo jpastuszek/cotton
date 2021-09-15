@@ -6,7 +6,7 @@ use std::fmt::{self, Display};
 use std::error::Error;
 
 pub use sha2::{Digest as DigestTrait, Sha256};
-pub use sha2::digest::generic_array::GenericArray;
+use sha2::digest::generic_array::GenericArray;
 use hex::{self, FromHexError};
 
 #[derive(Debug)]
@@ -39,18 +39,15 @@ impl Error for DigestError {
     }
 }
 
-pub type DigestAlgorithm = Sha256;
-
+/// Represents SHA2-256 hash value
 #[derive(PartialEq, Eq, Clone)]
-pub struct Digest(GenericArray<u8, <DigestAlgorithm as DigestTrait>::OutputSize>);
-
-//TODO: deref as_slice
+pub struct Digest(GenericArray<u8, <Sha256 as DigestTrait>::OutputSize>);
 
 impl Digest {
     /// Create new Digest from give bytes as is.
     pub fn new(value: &[u8]) -> Result<Digest, DigestError> {
-        if value.len() != DigestAlgorithm::output_size() {
-            Err(DigestError::LengthMissmatch { got: value.len(), expected: DigestAlgorithm::output_size() })
+        if value.len() != Sha256::output_size() {
+            Err(DigestError::LengthMissmatch { got: value.len(), expected: Sha256::output_size() })
         } else {
             Ok(Digest(GenericArray::clone_from_slice(&value)))
         }
@@ -63,7 +60,7 @@ impl Digest {
 
     /// Calculate digest from content read from a reader.
     pub fn from_reader<R: Read>(reader: &mut R) -> Result<Digest, io::Error> {
-        let mut digest = DigestAlgorithm::new();
+        let mut digest = Sha256::new();
         std::io::copy(reader, &mut digest)?;
         Ok(Digest(digest.finalize()))
     }
@@ -76,7 +73,7 @@ impl Digest {
 
     /// Calculate digest from a stream of byte buffers.
     pub fn from_buffers<S: AsRef<[u8]>>(buffers: impl IntoIterator<Item = S, IntoIter = impl Iterator<Item = S>>) -> Digest {
-        let mut hash = DigestAlgorithm::new();
+        let mut hash = Sha256::new();
         for buffer in buffers {
             hash.update(buffer);
         }
@@ -99,7 +96,7 @@ impl Digest {
     }
 
     /// Unwraps digest value GenericArray.
-    pub fn unwrap(&self) -> GenericArray<u8, <DigestAlgorithm as DigestTrait>::OutputSize> {
+    pub fn unwrap(&self) -> GenericArray<u8, <Sha256 as DigestTrait>::OutputSize> {
         self.0
     }
 }
@@ -112,7 +109,7 @@ impl Display for Digest {
 
 impl fmt::Debug for Digest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Digest")
+        f.debug_tuple("DigestSha256")
             .field(&format_args!("{:X}", &self.0))
             .finish()
     }
@@ -145,14 +142,14 @@ impl From<io::Error> for FileDigestError {
     }
 }
 
-/// Calculates SHA-256 hash from list of strings and returns hex representation.
+/// Calculates SHA2-256 hash from list of strings and returns hex representation.
 pub fn hex_digest<S: AsRef<[u8]>>(
     parts: impl IntoIterator<Item = S, IntoIter = impl Iterator<Item = S>>,
 ) -> String {
     Digest::from_buffers(parts).to_hex()
 }
 
-/// Calculates SHA-256 hash from contents of a (potentially large) file and returns hex
+/// Calculates SHA2-256 hash from contents of a (potentially large) file and returns hex
 /// representation.
 pub fn hex_digest_file(path: impl AsRef<Path>) -> Result<String, FileDigestError> {
     Ok(Digest::from_file(path)?.to_hex())

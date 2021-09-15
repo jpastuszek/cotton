@@ -59,7 +59,7 @@
 
 mod app_dir;
 mod cmd;
-mod digest;
+mod hashing;
 mod time;
 
 // needed for derive to work
@@ -79,6 +79,8 @@ pub use log;
 pub use problem;
 pub use error_context;
 pub use sha2;
+pub use sha2::digest;
+pub use sha2::digest::generic_array;
 pub use hex;
 pub use tap;
 pub mod loggerv;
@@ -181,9 +183,10 @@ pub mod prelude {
     pub use super::cmd::*;
     pub use ::shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
 
-    // Content hashing
-    pub use super::digest::*;
-    pub use hex::{encode as hex_encode, decode as hex_decode};
+    // Content hashing and crypto
+    pub use super::hashing::*;
+    pub use hex::{encode as hex_encode, decode as hex_decode, FromHexError};
+    pub use sha2::digest::generic_array::GenericArray;
 
     // App directory
     pub use super::app_dir::*;
