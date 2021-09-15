@@ -119,21 +119,6 @@ pub mod prelude {
     #[cfg(target_family = "unix")]
     pub use file_owner::{FileOwnerError, PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group, Group as FileGroup, Owner as FileOwner};
 
-    /// Runs `f()` with given umask set and restores previous umask when done.
-    ///
-    /// Note: There is a lock put around the set/f()/reset so concurrent execution will run
-    /// with consistent umask value.
-    pub fn with_umask<O>(umask: u32, f: impl FnOnce() -> O) -> O {
-        let lock = std::sync::Mutex::new(());
-
-        let old = set_umask(umask);
-        let out = f();
-        set_umask(old);
-
-        drop(lock);
-        out
-    }
-
     // Extra traits and stuff
     pub use std::hash::Hash;
     pub use std::marker::PhantomData;
