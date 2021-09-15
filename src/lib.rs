@@ -78,7 +78,8 @@ pub use atty;
 pub use log;
 pub use problem;
 pub use error_context;
-pub use shaman;
+pub use sha2;
+pub use hex;
 pub use tap;
 pub mod loggerv;
 pub use duct;
@@ -182,6 +183,7 @@ pub mod prelude {
 
     // Content hashing
     pub use super::digest::*;
+    pub use hex::{encode as hex_encode, decode as hex_decode};
 
     // App directory
     pub use super::app_dir::*;
