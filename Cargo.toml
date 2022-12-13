@@ -12,7 +12,7 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [features]
-default = ["args", "logging", "time", "term"]
+default = ["args", "logging", "time", "term", "hashing"]
 # Paring of arguments
 args = ["clap"]
 # Logger and logging
@@ -21,6 +21,8 @@ logging = ["log", "stderrlog"]
 time = ["chrono"]
 # Terminal
 term = ["ansi_term", "atty"]
+# Hashing
+hashing = ["hex", "sha2"]
 
 [dependencies]
 log = { version = "0.4.8", features = ["std"], optional = true }
@@ -45,8 +47,8 @@ signal-hook = "0.3.8"
 directories = "3.0.2"
 maybe-string = "0.1.0"
 shellwords = "1.1.0"
-hex = "0.4.3"
-sha2 = "0.9.8"
+hex = { version = "0.4.3", optional = true }
+sha2 = { version = "0.9.8", optional = true }
 clap = { version = "4.0.29", features = ["derive"], optional = true }
 
 [target.'cfg(unix)'.dependencies]

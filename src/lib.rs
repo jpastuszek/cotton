@@ -62,11 +62,12 @@
 
 mod app_dir;
 mod cmd;
+#[cfg(feature = "hashing")]
 mod hashing;
 #[cfg(feature = "time")]
 mod time;
 
-// All used crates
+// All used crates available for direct usage
 
 // Extensions
 pub use filetime;
@@ -105,15 +106,15 @@ pub use log;
 pub use stderrlog;
 
 // Hashing
+#[cfg(feature = "sha2")]
 pub use sha2;
-pub use sha2::digest;
-pub use sha2::digest::generic_array;
 
 // Shellout/processes
 pub use duct;
 pub use shellwords;
 
 // Strings
+#[cfg(feature = "hex")]
 pub use hex;
 pub use maybe_string;
 
@@ -198,9 +199,13 @@ pub mod prelude {
     pub use ::shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
 
     // Content hashing and crypto
+    #[cfg(feature = "hashing")]
     pub use super::hashing::*;
+
+    #[cfg(feature = "hex")]
     pub use hex::{encode as hex_encode, decode as hex_decode, FromHexError};
-    pub use sha2::digest::generic_array::GenericArray;
+    #[cfg(feature = "hashing")]
+    pub use sha2::digest::{self, generic_array::{self, GenericArray}};
 
     // App directory
     pub use super::app_dir::*;
