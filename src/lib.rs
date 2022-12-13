@@ -56,6 +56,11 @@
 
 //TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
 //TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
+//TODO: rid of secrecy crate as it is hard to use correctly and is not in scope
+//TODO: put some features behind feature flags (all enabled by default): hashing, shell/cmd, scopeguard, signals/uninterruptible, time/duration, app_dir
+//TODO: replace structopt with clap derive
+//TODO: replace logger with stderrlog
+//TODO: consider duct replacement?
 
 mod app_dir;
 mod cmd;
