@@ -70,15 +70,19 @@ mod time;
 // All used crates available for direct usage
 
 // Extensions
-pub use filetime;
-#[cfg(target_family = "unix")]
-pub use file_owner;
-pub use file_mode;
 pub use itertools;
 pub use linked_hash_map;
 pub use linked_hash_set;
 pub use boolinator;
 pub use tap;
+
+// File
+#[cfg(feature = "filetime")]
+pub use filetime;
+#[cfg(all(target_family = "unix", feature = "file-owner"))]
+pub use file_owner;
+#[cfg(feature = "file-mode")]
+pub use file_mode;
 
 // Error handling
 pub use problem;
@@ -143,10 +147,11 @@ pub mod prelude {
     pub use std::path::{Path, PathBuf};
 
     // filesystem
+    #[cfg(feature = "file-mode")]
     pub use file_mode::{ModeParseError, Mode as FileMode, User, FileType, ProtectionBit, Protection, SpecialBit, Special, set_umask};
-    #[cfg(target_family = "unix")]
+    #[cfg(all(target_family = "unix", feature = "file-mode"))]
     pub use file_mode::{ModeError, ModePath, ModeFile, SetMode};
-    #[cfg(target_family = "unix")]
+    #[cfg(all(target_family = "unix", feature = "file-owner"))]
     pub use file_owner::{FileOwnerError, PathExt, group, owner, owner_group, set_group, set_owner, set_owner_group, Group as FileGroup, Owner as FileOwner};
 
     // Extra traits and stuff
@@ -154,6 +159,7 @@ pub mod prelude {
     pub use std::marker::PhantomData;
 
     // Timestamps for files
+    #[cfg(feature = "filetime")]
     pub use filetime::{set_file_atime, set_file_handle_times, set_file_mtime, set_file_times,
         set_symlink_file_times, FileTime};
 
