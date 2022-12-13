@@ -57,17 +57,13 @@
 //TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
 //TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
 //TODO: put some features behind feature flags (all enabled by default): hashing, shell/cmd, scopeguard, signals/uninterruptible, time/duration, app_dir
-//TODO: replace structopt with clap derive
-//TODO: replace logger with stderrlog
 //TODO: consider duct replacement?
 
 mod app_dir;
 mod cmd;
 mod hashing;
+#[cfg(feature = "time")]
 mod time;
-
-// needed for derive to work
-pub use structopt;
 
 // All used crates
 
@@ -88,15 +84,22 @@ pub use error_context;
 pub use scopeguard;
 
 // Time/Date
+#[cfg(feature = "chrono")]
 pub use chrono;
 
 // Terminal
 pub use ansi_term;
 pub use atty;
 
+// Argparse
+#[cfg(feature = "clap")]
+pub use clap;
+
 // Logging
+#[cfg(feature = "log")]
 pub use log;
-pub mod loggerv;
+#[cfg(feature = "stderr")]
+pub use stderrlog;
 
 // Hashing
 pub use sha2;
@@ -167,13 +170,13 @@ pub mod prelude {
     pub use std::convert::TryFrom;
     pub use std::convert::TryInto; // As we wait for "!"
 
-    // Logging and messaging
-    pub use log::{debug, error, info, log_enabled, trace, warn};
+    // Formatting
     pub use std::fmt::Write as FmtWrite; // allow write! to &mut String
     pub use std::fmt::{self, Display, Debug};
 
     // Arguments
-    pub use structopt::StructOpt;
+    #[cfg(feature = "args")]
+    pub use clap::{self /* needed for derive to work */, Parser, Args, ValueEnum, Subcommand};
 
     // Error handling
     pub use std::error::Error;
@@ -200,6 +203,7 @@ pub mod prelude {
     pub use super::app_dir::*;
 
     // Time and duration
+    #[cfg(feature = "time")]
     pub use super::time::*;
 
     // Iterators
@@ -232,28 +236,18 @@ pub mod prelude {
     }
 
     // Logging
-    #[derive(Debug, StructOpt)]
-    pub struct LoggingOpt {
-        /// Verbose mode (-v for INFO, -vv for DEBUG, -vvv for TRACE, -vvvv TRACE all modules)
-        #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
-        pub verbose: u8,
+    #[cfg(feature = "logging")]
+    pub use log::{debug, error, info, log_enabled, trace, warn};
 
-        /// Only log errors
-        #[structopt(long = "errors-only")]
-        pub errors_only: bool,
-
-        /// Force colorizing the logger output
-        #[structopt(long = "force-colors")]
-        pub force_colors: bool,
-    }
-
-    #[derive(Debug, StructOpt)]
+    #[cfg(feature = "args")]
+    #[derive(Debug, Args)]
     pub struct DryRunOpt {
         /// Just print what would have been done
-        #[structopt(long = "dry-run", short = "-d")]
+        #[arg(long = "dry-run", short = 'd')]
         pub enabled: bool,
     }
 
+    #[cfg(all(feature = "args", feature = "logging"))]
     impl DryRunOpt {
         pub fn run(&self, msg: impl Display, run: impl FnOnce() -> ()) -> () {
             if self.enabled {
@@ -349,50 +343,57 @@ pub mod prelude {
         Ok(bytes)
     }
 
-    pub fn init_logger(
-        args: &LoggingOpt,
-        module_paths: impl IntoIterator<Item = impl Into<String>>,
-    ) {
-        use crate::loggerv::{Logger, Output};
-        use log::Level;
+    #[cfg(all(feature = "args", feature = "logging"))]
+    #[derive(Args)]
+    pub struct ArgsLogger {
+        /// Verbose mode (-v for INFO, -vv for DEBUG)
+        #[arg(short = 'v', long, action = clap::ArgAction::Count)]
+        pub verbose: u8,
 
-        let (base_level, verbose) = if args.errors_only {
-            (Level::Error, 0)
-        } else {
-            (Level::Warn, args.verbose)
-        };
+        /// Quiet mode (-s for no WARN, -ss for no ERROR)
+        #[arg(short = 'q', long, action = clap::ArgAction::Count)]
+        quiet: u8,
 
-        let mut logger = Logger::new()
-            .base_level(base_level)
-            .verbosity(verbose as u64)
-            .output(&Level::Info, Output::Stderr)
-            .output(&Level::Debug, Output::Stderr)
-            .output(&Level::Trace, Output::Stderr)
-            .module_path(false)
-            .timestamp_format_default();
+        /// Force colorizing the logger output
+        #[arg(long = "force-colors")]
+        pub force_colors: bool,
+    }
 
-        if verbose <= 3 {
-            logger = logger
-                .add_module_path_filter("cotton")
-                .add_module_path_filter("problem");
+    #[cfg(all(feature = "args", feature = "logging"))]
+    pub fn setup_logger(opt: ArgsLogger, module_paths: impl IntoIterator<Item = impl Into<String>>) {
+        let verbosity = (opt.verbose + 1) as i16 - opt.quiet as i16;
+        _setup_logger(verbosity, opt.force_colors, module_paths)
+    }
 
-            logger = module_paths
-                .into_iter()
-                .fold(logger, |logger, module_path| {
-                    logger.add_module_path_filter(module_path)
-                });
+    #[cfg(all(not(feature = "args"), feature = "logging"))]
+    pub fn setup_logger(verbosity: i16, force_colors: bool, module_paths: impl IntoIterator<Item = impl Into<String>>) {
+        _setup_logger(verbosity, force_colors, module_paths)
+    }
+
+    #[cfg(feature = "logging")]
+    pub fn _setup_logger(verbosity: i16, force_colors: bool, module_paths: impl IntoIterator<Item = impl Into<String>>) {
+        let mut logger = stderrlog::new();
+
+        logger
+            .quiet(verbosity < 0)
+            .verbosity(verbosity as usize)
+            .color(if force_colors { stderrlog::ColorChoice::Always } else { stderrlog::ColorChoice::Auto })
+            .timestamp(stderrlog::Timestamp::Microsecond)
+            .module(module_path!())
+            .module("cotton")
+            .module("problem");
+
+        for module in module_paths {
+            logger.module(module);
         }
 
-        if args.force_colors {
-            logger = logger.force_colors()
-        }
+        logger
+            .init()
+            .unwrap();
 
-        logger.level(true).init().or_failed_to("init logger");
-
-        ::problem::format_panic_to_error_log();
+        problem::format_panic_to_error_log();
     }
 }
-
 
 #[cfg(test)]
 mod tests {
