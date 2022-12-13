@@ -57,6 +57,16 @@ impl ChoronoDurationExt for chrono::Duration {
     }
 }
 
+/// Sleeps for duration.
+pub fn sleep(duration: Duration) {
+    std::thread::sleep(duration)
+}
+
+/// Sleeps for given number of seconds.
+pub fn sleep_sec(seconds: f64) {
+    std::thread::sleep(Duration::from_secs_f64(seconds))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -78,14 +88,4 @@ mod tests {
 
         assert_eq!(d, chrono::Duration::from_millis_str("1500").unwrap());
     }
-}
-
-/// Sleeps for duration.
-pub fn sleep(duration: Duration) {
-    std::thread::sleep(duration)
-}
-
-/// Sleeps for given number of seconds.
-pub fn sleep_sec(seconds: f64) {
-    std::thread::sleep(Duration::from_secs_f64(seconds))
 }

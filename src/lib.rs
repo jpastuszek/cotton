@@ -56,7 +56,6 @@
 
 //TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
 //TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
-//TODO: rid of secrecy crate as it is hard to use correctly and is not in scope
 //TODO: put some features behind feature flags (all enabled by default): hashing, shell/cmd, scopeguard, signals/uninterruptible, time/duration, app_dir
 //TODO: replace structopt with clap derive
 //TODO: replace logger with stderrlog
@@ -70,37 +69,56 @@ mod time;
 // needed for derive to work
 pub use structopt;
 
-// Export crates to give access to unexported types
-pub use directories;
+// All used crates
+
+// Extensions
 pub use filetime;
-pub use boolinator;
-pub use chrono;
+#[cfg(target_family = "unix")]
+pub use file_owner;
+pub use file_mode;
 pub use itertools;
 pub use linked_hash_map;
 pub use linked_hash_set;
-pub use ansi_term;
-pub use atty;
-pub use log;
+pub use boolinator;
+pub use tap;
+
+// Error handling
 pub use problem;
 pub use error_context;
+pub use scopeguard;
+
+// Time/Date
+pub use chrono;
+
+// Terminal
+pub use ansi_term;
+pub use atty;
+
+// Logging
+pub use log;
+pub mod loggerv;
+
+// Hashing
 pub use sha2;
 pub use sha2::digest;
 pub use sha2::digest::generic_array;
-pub use hex;
-pub use tap;
-pub mod loggerv;
+
+// Shellout/processes
 pub use duct;
-pub use maybe_string;
-pub use file_mode;
 pub use shellwords;
-pub use secrecy;
-#[cfg(target_family = "unix")]
-pub use file_owner;
-pub use scopeguard;
+
+// Strings
+pub use hex;
+pub use maybe_string;
+
+// UNIX signals
 #[cfg(target_family = "unix")]
 pub use signal_hook;
 #[cfg(target_family = "unix")]
 pub use uninterruptible;
+
+// app dir
+pub use directories;
 
 pub mod prelude {
     // Often used I/O
@@ -329,56 +347,6 @@ pub mod prelude {
         }
 
         Ok(bytes)
-    }
-
-    // Secret handling
-    pub use secrecy::{Secret, SecretString, SecretVec, SecretBox, Zeroize};
-
-    /// Reads first line of the file as a secret string.
-    pub fn read_secret(path: &Path) -> Result<SecretString, FileIoError> {
-        _read_secret_bytes(path, |vec|
-            match String::from_utf8(vec) {
-                Ok(s) => Ok(SecretString::from(s)),
-                Err(err) => {
-                    let utf8_err = err.utf8_error();
-                    err.into_bytes().zeroize();
-                    Err(utf8_err.wrap_context(path.to_owned()))
-                }
-            }
-        )
-    }
-
-    /// Reads first line of the file as a secret bytes.
-    pub fn read_secret_bytes(path: &Path) -> Result<SecretVec<u8>, FileIoError> {
-        _read_secret_bytes(path, |v| -> Result<_, FileIoError> { Ok(v.into()) })
-    }
-
-    // Note: avoid Vec realloctions so secret is not left unzeroed
-    fn _read_secret_bytes<E, S, ES, W>(path: &Path, wrap: W) -> Result<ES, FileIoError>
-        where
-            E: Into<FileIoError>,
-            ES: secrecy::ExposeSecret<S>,
-            W: FnOnce(Vec<u8>) -> Result<ES, E>
-    {
-        wrap_in_context_of_with(|| path.to_owned(), || -> Result<_, io::Error> {
-            let mut file = File::open(path)?;
-
-            // see how much data we need to prealocate
-            let len = (&mut file)
-                .bytes()
-                .take_while(|b| b.as_ref().map(|b| *b != b'\n').unwrap_or(true))
-                .try_fold(0usize, |len, b| b.map(|_| len + 1))?;
-            file.seek(SeekFrom::Start(0))?;
-
-            // resize vec to the length of the secret and read it in
-            let mut out = Vec::new();
-            out.resize(len, 0);
-            file.read_exact(&mut out)?;
-
-            Ok(out)
-        })
-        .map_err(Into::into)
-        .and_then(|out| wrap(out).map_err(|err| err.into()))
     }
 
     pub fn init_logger(
