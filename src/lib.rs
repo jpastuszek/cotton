@@ -58,6 +58,7 @@
 //TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
 //TODO: put some features behind feature flags (all enabled by default): hashing, shell/cmd, scopeguard, signals/uninterruptible, time/duration, app_dir
 //TODO: consider duct replacement?
+//TODO: add progress bar crate under "term" feature
 
 mod app_dir;
 mod cmd;
@@ -88,7 +89,9 @@ pub use scopeguard;
 pub use chrono;
 
 // Terminal
+#[cfg(feature = "ansi_term")]
 pub use ansi_term;
+#[cfg(feature = "atty")]
 pub use atty;
 
 // Argparse
@@ -223,14 +226,17 @@ pub mod prelude {
     //TODO: pub use tap::prelude::{Pipe}; - colides with duct::Expression.pipe!
 
     // Terminal
+    #[cfg(feature = "term")]
     pub use ansi_term::{Colour, Style, ANSIString, ANSIStrings, unstyle};
 
     /// Returns true if stdout is a TTY
+    #[cfg(feature = "term")]
     pub fn stdout_is_tty() -> bool {
         atty::is(atty::Stream::Stdout)
     }
 
     /// Returns true if stderr is a TTY
+    #[cfg(feature = "term")]
     pub fn stderr_is_tty() -> bool {
         atty::is(atty::Stream::Stdout)
     }
