@@ -12,7 +12,7 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [features]
-default = ["args", "logging", "time", "term", "hashing", "files"]
+default = ["args", "logging", "time", "term", "hashing", "files", "signals"]
 # Paring of arguments
 args = ["clap"]
 # Logger and logging
@@ -25,6 +25,8 @@ term = ["ansi_term", "atty"]
 hashing = ["hex", "sha2"]
 # Files
 files = ["filetime", "file-mode", "file-owner"]
+# UNIX signals
+signals = ["signal-hook", "uninterruptible"]
 
 [dependencies]
 itertools = "0.9.0"
@@ -44,8 +46,8 @@ atty = { version = "0.2.14", optional = true }
 chrono = { version = "0.4.23", optional = true }
 duct = "0.13.2"
 scopeguard = "1.1.0"
-uninterruptible = "0.1.0"
-signal-hook = "0.3.8"
+signal-hook = { version = "0.3.8", optional = true }
+uninterruptible = { version = "0.1.0", optional = true }
 directories = "3.0.2"
 maybe-string = "0.1.0"
 shellwords = "1.1.0"

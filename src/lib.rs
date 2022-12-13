@@ -123,9 +123,9 @@ pub use hex;
 pub use maybe_string;
 
 // UNIX signals
-#[cfg(target_family = "unix")]
+#[cfg(all(target_family = "unix", feature = "signal-hook"))]
 pub use signal_hook;
-#[cfg(target_family = "unix")]
+#[cfg(all(target_family = "unix", feature = "uninterruptible"))]
 pub use uninterruptible;
 
 // app dir
@@ -229,6 +229,7 @@ pub mod prelude {
     pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
 
     // Signals
+    #[cfg(all(target_family = "unix", feature = "signals"))]
     pub use uninterruptible::Uninterruptible;
 
     // Handy extensions
