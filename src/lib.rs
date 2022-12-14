@@ -54,10 +54,6 @@
 //! ```
 //!
 
-//TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
-//TODO: consider duct replacement?
-//TODO: add progress bar crate under "term" feature
-
 #[cfg(feature = "app")]
 mod app_dir;
 #[cfg(feature = "hashing")]
@@ -103,6 +99,10 @@ pub use chrono;
 pub use ansi_term;
 #[cfg(feature = "atty")]
 pub use atty;
+#[cfg(feature = "zzz")]
+pub use zzz;
+#[cfg(feature = "term_size")]
+pub use term_size;
 
 // Argparse
 #[cfg(feature = "clap")]
@@ -268,6 +268,10 @@ pub mod prelude {
     // Terminal
     #[cfg(feature = "term")]
     pub use ansi_term::{Colour, Style, ANSIString, ANSIStrings, unstyle};
+    #[cfg(feature = "term")]
+    pub use zzz::ProgressBarIterExt;
+    #[cfg(feature = "term")]
+    pub use term_size::dimensions as term_dimensions;
 
     /// Returns true if stdout is a TTY
     #[cfg(feature = "term")]
