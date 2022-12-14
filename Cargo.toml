@@ -32,7 +32,7 @@ errors = ["problem", "error-context", "scopeguard", "assert_matches"]
 # Application environment
 app = ["directories"]
 # Process execution
-process = ["shellwords", "exec", "mkargs"]
+process = ["shellwords", "exec", "mkargs", "cradle", "gag"]
 
 [dependencies]
 itertools = "0.10.5"
@@ -61,6 +61,8 @@ hex = { version = "0.4.3", optional = true }
 sha2 = { version = "0.10.6", optional = true }
 digest = { version = "0.10.6", optional = true }
 mkargs = { version = "1.0.0", optional = true }
+cradle = { version = "0.2.2", optional = true, features = ["gag"] }
+gag = { version = "1.0.0", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 exec = { version = "0.3.1", optional = true }

@@ -121,13 +121,16 @@ pub use sha2;
 pub use digest;
 
 // Shellout/processes
-//TODO: use cradle
 #[cfg(feature = "shellwords")]
 pub use shellwords;
 #[cfg(all(target_family = "unix", feature = "exec"))]
 pub use exec;
 #[cfg(feature = "mkargs")]
 pub use mkargs;
+#[cfg(feature = "cradle")]
+pub use cradle;
+#[cfg(feature = "gag")]
+pub use gag;
 
 // Strings
 #[cfg(feature = "hex")]
@@ -226,6 +229,10 @@ pub mod prelude {
     pub use crate::process::*;
     #[cfg(feature = "process")]
     pub use mkargs::{mkargs, MkArgs};
+    #[cfg(feature = "process")]
+    pub use cradle::prelude::*;
+    #[cfg(feature = "process")]
+    pub use gag::Gag;
 
     // Content hashing and crypto
     #[cfg(feature = "hashing")]
