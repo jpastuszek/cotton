@@ -54,9 +54,7 @@
 //! ```
 //!
 
-//TODO: don't use Problme for error type of the functions in this crate as it makes it more diffuclt to work with Error trait based errors in the client.
 //TODO: use https://crates.io/crates/camino for Path? If so also add support in file-mode crate.
-//TODO: put some features behind feature flags (all enabled by default): hashing, shell/cmd, scopeguard, signals/uninterruptible, time/duration, app_dir
 //TODO: consider duct replacement?
 //TODO: add progress bar crate under "term" feature
 
@@ -66,6 +64,8 @@ mod app_dir;
 mod hashing;
 #[cfg(feature = "time")]
 mod time;
+#[cfg(feature = "process")]
+mod process;
 
 // All used crates available for direct usage
 
@@ -220,6 +220,8 @@ pub mod prelude {
     // Running commands
     #[cfg(feature = "process")]
     pub use shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
+    #[cfg(feature = "process")]
+    pub use crate::process::*;
 
     // Content hashing and crypto
     #[cfg(feature = "hashing")]
