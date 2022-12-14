@@ -121,7 +121,10 @@ pub use sha2;
 // Shellout/processes
 //TODO: use cradle
 //TODO: use mkargs
+#[cfg(feature = "shellwords")]
 pub use shellwords;
+#[cfg(all(target_family = "unix", feature = "exec"))]
+pub use exec;
 
 // Strings
 #[cfg(feature = "hex")]
@@ -213,7 +216,8 @@ pub mod prelude {
     pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
 
     // Running commands
-    pub use ::shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
+    #[cfg(feature = "process")]
+    pub use shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
 
     // Content hashing and crypto
     #[cfg(feature = "hashing")]
