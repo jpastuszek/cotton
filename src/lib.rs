@@ -262,8 +262,7 @@ pub mod prelude {
 
     // Handy extensions
     pub use boolinator::Boolinator;
-    pub use tap::prelude::{Conv, Tap, TapFallible, TapOptional, TryConv};
-    //TODO: pub use tap::prelude::{Pipe}; - colides with duct::Expression.pipe!
+    pub use tap::prelude::{Conv, Tap, Pipe, TapFallible, TapOptional, TryConv};
 
     // Terminal
     #[cfg(feature = "term")]
