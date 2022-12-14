@@ -61,7 +61,6 @@
 //TODO: add progress bar crate under "term" feature
 
 mod app_dir;
-mod cmd;
 #[cfg(feature = "hashing")]
 mod hashing;
 #[cfg(feature = "time")]
@@ -85,9 +84,14 @@ pub use file_owner;
 pub use file_mode;
 
 // Error handling
+#[cfg(feature = "problem")]
 pub use problem;
+#[cfg(feature = "error-context")]
 pub use error_context;
+#[cfg(feature = "scopeguard")]
 pub use scopeguard;
+#[cfg(feature = "assert_matches")]
+pub use assert_matches;
 
 // Time/Date
 #[cfg(feature = "chrono")]
@@ -114,7 +118,8 @@ pub use stderrlog;
 pub use sha2;
 
 // Shellout/processes
-pub use duct;
+//TODO: use cradle
+//TODO: use mkargs
 pub use shellwords;
 
 // Strings
@@ -190,18 +195,22 @@ pub mod prelude {
 
     // Error handling
     pub use std::error::Error;
+    #[cfg(feature = "errors")]
     pub use assert_matches::assert_matches;
+    #[cfg(feature = "errors")]
     pub use ::problem::prelude::{problem, in_context_of, in_context_of_with, FailedTo, FailedToIter, Fatal, FatalProblem,
         MapProblem, MapProblemOr, OkOrProblem, Problem, ProblemWhile, OkOrLog, OkOrLogIter};
-    pub use ::problem::result::FinalResult;
-    pub use ::problem::result::Result as PResult;
+    #[cfg(feature = "errors")]
+    pub use ::problem::result::{FinalResult, Result as PResult};
+    #[cfg(feature = "errors")]
     pub use ::error_context::{
         in_context_of as in_error_context_of, in_context_of_with as in_error_context_of_with, wrap_in_context_of,
         wrap_in_context_of_with, ErrorContext, ErrorNoContext, MapErrorNoContext, ResultErrorWhile,
         ResultErrorWhileWrap, ToErrorNoContext, WithContext, WrapContext};
+    #[cfg(feature = "errors")]
+    pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
 
     // Running commands
-    pub use super::cmd::*;
     pub use ::shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
 
     // Content hashing and crypto
@@ -224,9 +233,6 @@ pub mod prelude {
     pub use itertools::*;
     pub use std::iter::FromIterator;
     pub use std::iter::{empty, from_fn, once, once_with, repeat, repeat_with, successors};
-
-    // RAII patterns
-    pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
 
     // Signals
     #[cfg(all(target_family = "unix", feature = "signals"))]
@@ -301,23 +307,12 @@ pub mod prelude {
         }
     }
 
-    impl From<ErrorContext<io::Error, PathBuf>> for FileIoError {
-        fn from(err: ErrorContext<io::Error, PathBuf>) -> FileIoError {
-            FileIoError::IoError(err.context, err.error)
-        }
-    }
-
-    impl From<ErrorContext<std::str::Utf8Error, PathBuf>> for FileIoError {
-        fn from(err: ErrorContext<std::str::Utf8Error, PathBuf>) -> FileIoError {
-            FileIoError::Utf8Error(err.context, err.error)
-        }
-    }
-
     pub fn read_stdin() -> String {
         let mut buffer = String::new();
         stdin()
             .read_to_string(&mut buffer)
-            .or_failed_to("read UTF-8 string from stdin");
+            .map_err(|err| format!("Failed to read UTF-8 string from stdin due to: {}", err))
+            .unwrap();
         buffer
     }
 
@@ -325,14 +320,15 @@ pub mod prelude {
         let mut buffer = Vec::new();
         stdin()
             .read_to_end(&mut buffer)
-            .or_failed_to("read bytes from stdin");
+            .map_err(|err| format!("Failed to read bytes from stdin due to: {}", err))
+            .unwrap();
         buffer
     }
 
     pub fn read_stdin_lines() -> impl Iterator<Item = String> {
         BufReader::new(stdin())
             .lines()
-            .or_failed_to("read UTF-8 lines from stdin")
+            .map(|val| val.map_err(|err| format!("Failed to read UTF-8 lines from stdin due to: {}", err)).unwrap())
     }
 
     /// Read content of all files as string.
@@ -341,8 +337,8 @@ pub mod prelude {
 
         for path in paths {
             let path = path.as_ref();
-            let mut file = File::open(path).wrap_error_while_with(|| path.into())?;
-            file.read_to_string(&mut string).wrap_error_while_with(|| path.into())?;
+            let mut file = File::open(path).map_err(|err| FileIoError::IoError(path.into(), err))?;
+            file.read_to_string(&mut string).map_err(|err| FileIoError::IoError(path.into(), err))?;
         }
 
         Ok(string)
@@ -354,8 +350,8 @@ pub mod prelude {
 
         for path in paths {
             let path = path.as_ref();
-            let mut file = File::open(path).wrap_error_while_with(|| path.into())?;
-            file.read_to_end(&mut bytes).wrap_error_while_with(|| path.into())?;
+            let mut file = File::open(path).map_err(|err| FileIoError::IoError(path.into(), err))?;
+            file.read_to_end(&mut bytes).map_err(|err| FileIoError::IoError(path.into(), err))?;
         }
 
         Ok(bytes)
@@ -409,6 +405,7 @@ pub mod prelude {
             .init()
             .unwrap();
 
+        #[cfg(feature = "problem")]
         problem::format_panic_to_error_log();
     }
 }
