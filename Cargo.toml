@@ -12,7 +12,7 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [features]
-default = ["args", "logging", "time", "term", "hashing", "files", "signals", "errors"]
+default = ["args", "logging", "time", "term", "hashing", "files", "signals", "errors", "app"]
 # Paring of arguments
 args = ["clap"]
 # Logger and logging
@@ -29,11 +29,14 @@ files = ["filetime", "file-mode", "file-owner"]
 signals = ["signal-hook", "uninterruptible"]
 # Error handling
 errors = ["problem", "error-context", "scopeguard", "assert_matches"]
+# Application environment
+app = ["directories"]
 
 [dependencies]
 itertools = "0.9.0"
 linked-hash-map = "0.5.3"
 linked_hash_set = "0.1.4"
+maybe-string = "0.1.0"
 boolinator = "2.4.0"
 tap = "1.0.0"
 scopeguard = { version = "1.1.0", optional = true }
@@ -49,8 +52,7 @@ atty = { version = "0.2.14", optional = true }
 chrono = { version = "0.4.23", optional = true }
 signal-hook = { version = "0.3.8", optional = true }
 uninterruptible = { version = "0.1.0", optional = true }
-directories = "3.0.2"
-maybe-string = "0.1.0"
+directories = { version = "3.0.2", optional = true }
 shellwords = "1.1.0"
 hex = { version = "0.4.3", optional = true }
 sha2 = { version = "0.9.8", optional = true }

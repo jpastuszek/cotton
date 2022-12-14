@@ -60,6 +60,7 @@
 //TODO: consider duct replacement?
 //TODO: add progress bar crate under "term" feature
 
+#[cfg(feature = "app")]
 mod app_dir;
 #[cfg(feature = "hashing")]
 mod hashing;
@@ -133,7 +134,8 @@ pub use signal_hook;
 #[cfg(all(target_family = "unix", feature = "uninterruptible"))]
 pub use uninterruptible;
 
-// app dir
+// Application environment
+#[cfg(feature = "directories")]
 pub use directories;
 
 pub mod prelude {
@@ -222,7 +224,8 @@ pub mod prelude {
     #[cfg(feature = "hashing")]
     pub use sha2::digest::{self, generic_array::{self, GenericArray}};
 
-    // App directory
+    // Application environment
+    #[cfg(feature = "app")]
     pub use super::app_dir::*;
 
     // Time and duration
