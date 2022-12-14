@@ -8,6 +8,7 @@ use std::error::Error;
 pub use sha2::{Digest as DigestTrait, Sha256};
 use sha2::digest::generic_array::GenericArray;
 use hex::{self, FromHexError};
+use digest::OutputSizeUser;
 
 #[derive(Debug)]
 pub enum DigestError {
@@ -41,13 +42,13 @@ impl Error for DigestError {
 
 /// Represents SHA2-256 hash value
 #[derive(PartialEq, Eq, Clone)]
-pub struct Digest(GenericArray<u8, <Sha256 as DigestTrait>::OutputSize>);
+pub struct Digest(GenericArray<u8, <Sha256 as OutputSizeUser>::OutputSize>);
 
 impl Digest {
     /// Create new Digest from give bytes as is.
     pub fn new(value: &[u8]) -> Result<Digest, DigestError> {
-        if value.len() != Sha256::output_size() {
-            Err(DigestError::LengthMissmatch { got: value.len(), expected: Sha256::output_size() })
+        if value.len() != <Sha256 as OutputSizeUser>::output_size() {
+            Err(DigestError::LengthMissmatch { got: value.len(), expected: <Sha256 as OutputSizeUser>::output_size() })
         } else {
             Ok(Digest(GenericArray::clone_from_slice(&value)))
         }
@@ -96,7 +97,7 @@ impl Digest {
     }
 
     /// Unwraps digest value GenericArray.
-    pub fn unwrap(&self) -> GenericArray<u8, <Sha256 as DigestTrait>::OutputSize> {
+    pub fn unwrap(&self) -> GenericArray<u8, <Sha256 as OutputSizeUser>::OutputSize> {
         self.0
     }
 }

@@ -117,6 +117,8 @@ pub use stderrlog;
 // Hashing
 #[cfg(feature = "sha2")]
 pub use sha2;
+#[cfg(feature = "digest")]
+pub use digest;
 
 // Shellout/processes
 //TODO: use cradle
