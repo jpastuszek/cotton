@@ -12,7 +12,7 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [features]
-default = ["args", "logging", "time", "term", "hashing", "files", "signals", "errors", "app", "exec"]
+default = ["args", "logging", "time", "term", "hashing", "files", "signals", "errors", "app", "exec", "process"]
 # Paring of arguments
 args = ["clap"]
 # Logger and logging
@@ -32,7 +32,7 @@ errors = ["problem", "error-context", "scopeguard", "assert_matches"]
 # Application environment
 app = ["directories"]
 # Process execution
-process = ["shellwords", "exec"]
+process = ["shellwords", "exec", "mkargs"]
 
 [dependencies]
 itertools = "0.10.5"
@@ -41,6 +41,7 @@ linked_hash_set = "0.1.4"
 maybe-string = "0.1.0"
 boolinator = "2.4.0"
 tap = "1.0.1"
+clap = { version = "4.0.29", features = ["derive"], optional = true }
 scopeguard = { version = "1.1.0", optional = true }
 filetime = { version = "0.2.19", optional = true }
 file-mode = { version = "0.1.2", optional = true }
@@ -59,7 +60,7 @@ shellwords = { version = "1.1.0", optional = true }
 hex = { version = "0.4.3", optional = true }
 sha2 = { version = "0.10.6", optional = true }
 digest = { version = "0.10.6", optional = true }
-clap = { version = "4.0.29", features = ["derive"], optional = true }
+mkargs = { version = "1.0.0", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 exec = { version = "0.3.1", optional = true }

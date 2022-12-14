@@ -122,11 +122,12 @@ pub use digest;
 
 // Shellout/processes
 //TODO: use cradle
-//TODO: use mkargs
 #[cfg(feature = "shellwords")]
 pub use shellwords;
 #[cfg(all(target_family = "unix", feature = "exec"))]
 pub use exec;
+#[cfg(feature = "mkargs")]
+pub use mkargs;
 
 // Strings
 #[cfg(feature = "hex")]
@@ -155,6 +156,7 @@ pub mod prelude {
         self, stdin, stdout, BufRead, BufReader, BufWriter, Read, Write, Cursor,
         Seek, SeekFrom
     };
+    pub use std::process::{Command, ExitStatus};
 
     pub use std::path::{Path, PathBuf};
 
@@ -222,6 +224,8 @@ pub mod prelude {
     pub use shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
     #[cfg(feature = "process")]
     pub use crate::process::*;
+    #[cfg(feature = "process")]
+    pub use mkargs::{mkargs, MkArgs};
 
     // Content hashing and crypto
     #[cfg(feature = "hashing")]
