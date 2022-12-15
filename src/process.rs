@@ -1,9 +1,7 @@
-use std::convert::Infallible;
-use std::ffi::OsStr;
-use std::path::Path;
 use maybe_string::MaybeString;
 use std::process::ExitStatus;
-use std::{path::PathBuf, fmt::{self, Display}, error::Error};
+#[cfg(all(target_family = "unix", feature = "exec"))]
+use std::{path::{Path, PathBuf}, fmt::{self, Display}, error::Error, ffi::OsStr, convert::Infallible};
 
 pub trait ExitStatusExt {
     /// Formats error message with status information and given error message.
@@ -30,12 +28,14 @@ impl ExitStatusExt for ExitStatus {
     }
 }
 
+#[cfg(all(target_family = "unix", feature = "exec"))]
 #[derive(Debug)]
 pub enum ExecError {
     RunError(PathBuf, exec::Error),
     ProgramStemError(PathBuf),
 }
 
+#[cfg(all(target_family = "unix", feature = "exec"))]
 impl Display for ExecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -46,6 +46,7 @@ impl Display for ExecError {
     }
 }
 
+#[cfg(all(target_family = "unix", feature = "exec"))]
 impl Error for ExecError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {

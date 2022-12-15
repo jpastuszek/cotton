@@ -54,13 +54,12 @@
 //! ```
 //!
 
-#[cfg(feature = "app")]
+#[cfg(feature = "directories")]
 mod app_dir;
-#[cfg(feature = "hashing")]
+#[cfg(all(feature = "hex", feature = "digest", feature = "sha2"))]
 mod hashing;
-#[cfg(feature = "time")]
+#[cfg(feature = "chrono")]
 mod time;
-#[cfg(feature = "process")]
 mod process;
 
 // All used crates available for direct usage
@@ -111,7 +110,7 @@ pub use clap;
 // Logging
 #[cfg(feature = "log")]
 pub use log;
-#[cfg(feature = "stderr")]
+#[cfg(feature = "stderrlog")]
 pub use stderrlog;
 
 // Hashing
@@ -202,53 +201,52 @@ pub mod prelude {
     pub use std::fmt::{self, Display, Debug};
 
     // Arguments
-    #[cfg(feature = "args")]
+    #[cfg(feature = "clap")]
     pub use clap::{self /* needed for derive to work */, Parser, Args, ValueEnum, Subcommand};
 
     // Error handling
     pub use std::error::Error;
-    #[cfg(feature = "errors")]
+    #[cfg(feature = "assert_matches")]
     pub use assert_matches::assert_matches;
-    #[cfg(feature = "errors")]
+    #[cfg(feature = "problem")]
     pub use ::problem::prelude::{problem, in_context_of, in_context_of_with, FailedTo, FailedToIter, Fatal, FatalProblem,
         MapProblem, MapProblemOr, OkOrProblem, Problem, ProblemWhile, OkOrLog, OkOrLogIter};
-    #[cfg(feature = "errors")]
+    #[cfg(feature = "problem")]
     pub use ::problem::result::{FinalResult, Result as PResult};
-    #[cfg(feature = "errors")]
+    #[cfg(feature = "error-context")]
     pub use ::error_context::{
         in_context_of as in_error_context_of, in_context_of_with as in_error_context_of_with, wrap_in_context_of,
         wrap_in_context_of_with, ErrorContext, ErrorNoContext, MapErrorNoContext, ResultErrorWhile,
         ResultErrorWhileWrap, ToErrorNoContext, WithContext, WrapContext};
-    #[cfg(feature = "errors")]
+    #[cfg(feature = "scopeguard")]
     pub use scopeguard::{defer, defer_on_success, defer_on_unwind, guard, guard_on_success, guard_on_unwind};
 
     // Running commands
-    #[cfg(feature = "process")]
+    #[cfg(feature = "shellwords")]
     pub use shellwords::{escape as shell_escape, join as shell_join, split as shell_split};
-    #[cfg(feature = "process")]
     pub use crate::process::*;
-    #[cfg(feature = "process")]
+    #[cfg(feature = "mkargs")]
     pub use mkargs::{mkargs, MkArgs};
-    #[cfg(feature = "process")]
+    #[cfg(feature = "cradle")]
     pub use cradle::prelude::*;
-    #[cfg(feature = "process")]
+    #[cfg(feature = "gag")]
     pub use gag::Gag;
 
     // Content hashing and crypto
-    #[cfg(feature = "hashing")]
+    #[cfg(all(feature = "hex", feature = "digest", feature = "sha2"))]
     pub use super::hashing::*;
 
     #[cfg(feature = "hex")]
     pub use hex::{encode as hex_encode, decode as hex_decode, FromHexError};
-    #[cfg(feature = "hashing")]
+    #[cfg(feature = "sha2")]
     pub use sha2::digest::{self, generic_array::{self, GenericArray}};
 
     // Application environment
-    #[cfg(feature = "app")]
+    #[cfg(feature = "directories")]
     pub use super::app_dir::*;
 
     // Time and duration
-    #[cfg(feature = "time")]
+    #[cfg(feature = "chrono")]
     pub use super::time::*;
 
     // Iterators
@@ -257,7 +255,7 @@ pub mod prelude {
     pub use std::iter::{empty, from_fn, once, once_with, repeat, repeat_with, successors};
 
     // Signals
-    #[cfg(all(target_family = "unix", feature = "signals"))]
+    #[cfg(all(target_family = "unix", feature = "uninterruptible"))]
     pub use uninterruptible::Uninterruptible;
 
     // Handy extensions
@@ -265,30 +263,30 @@ pub mod prelude {
     pub use tap::prelude::{Conv, Tap, Pipe, TapFallible, TapOptional, TryConv};
 
     // Terminal
-    #[cfg(feature = "term")]
+    #[cfg(feature = "ansi_term")]
     pub use ansi_term::{Colour, Style, ANSIString, ANSIStrings, unstyle};
-    #[cfg(feature = "term")]
+    #[cfg(feature = "zzz")]
     pub use zzz::ProgressBarIterExt;
-    #[cfg(feature = "term")]
+    #[cfg(feature = "term_size")]
     pub use term_size::dimensions as term_dimensions;
 
     /// Returns true if stdout is a TTY
-    #[cfg(feature = "term")]
+    #[cfg(feature = "atty")]
     pub fn stdout_is_tty() -> bool {
         atty::is(atty::Stream::Stdout)
     }
 
     /// Returns true if stderr is a TTY
-    #[cfg(feature = "term")]
+    #[cfg(feature = "atty")]
     pub fn stderr_is_tty() -> bool {
         atty::is(atty::Stream::Stdout)
     }
 
     // Logging
-    #[cfg(feature = "logging")]
+    #[cfg(feature = "log")]
     pub use log::{debug, error, info, log_enabled, trace, warn};
 
-    #[cfg(feature = "args")]
+    #[cfg(feature = "clap")]
     #[derive(Debug, Args)]
     pub struct DryRunOpt {
         /// Just print what would have been done
@@ -296,7 +294,7 @@ pub mod prelude {
         pub enabled: bool,
     }
 
-    #[cfg(all(feature = "args", feature = "logging"))]
+    #[cfg(all(feature = "clap", feature = "log"))]
     impl DryRunOpt {
         pub fn run(&self, msg: impl Display, run: impl FnOnce() -> ()) -> () {
             if self.enabled {
@@ -382,7 +380,7 @@ pub mod prelude {
         Ok(bytes)
     }
 
-    #[cfg(all(feature = "args", feature = "logging"))]
+    #[cfg(all(feature = "clap", feature = "stderrlog"))]
     #[derive(Args)]
     pub struct ArgsLogger {
         /// Verbose mode (-v for INFO, -vv for DEBUG)
@@ -398,18 +396,18 @@ pub mod prelude {
         pub force_colors: bool,
     }
 
-    #[cfg(all(feature = "args", feature = "logging"))]
+    #[cfg(all(feature = "clap", feature = "stderrlog"))]
     pub fn setup_logger(opt: ArgsLogger, module_paths: impl IntoIterator<Item = impl Into<String>>) {
         let verbosity = (opt.verbose + 1) as i16 - opt.quiet as i16;
         _setup_logger(verbosity, opt.force_colors, module_paths)
     }
 
-    #[cfg(all(not(feature = "args"), feature = "logging"))]
+    #[cfg(all(not(feature = "clap"), feature = "stderrlog"))]
     pub fn setup_logger(verbosity: i16, force_colors: bool, module_paths: impl IntoIterator<Item = impl Into<String>>) {
         _setup_logger(verbosity, force_colors, module_paths)
     }
 
-    #[cfg(feature = "logging")]
+    #[cfg(feature = "stderrlog")]
     pub fn _setup_logger(verbosity: i16, force_colors: bool, module_paths: impl IntoIterator<Item = impl Into<String>>) {
         let mut logger = stderrlog::new();
 
