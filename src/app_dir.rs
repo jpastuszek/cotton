@@ -6,6 +6,8 @@ pub struct AppInfo {
     pub author: &'static str,
 }
 
+//TODO: default to ARGV[0]?
+
 //BUG: this will alwyas be "cotton" instead of client package
 pub const APP_INFO: AppInfo = AppInfo {
     name: env!("CARGO_PKG_NAME"),

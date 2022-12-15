@@ -159,8 +159,8 @@ pub mod prelude {
         Seek, SeekFrom
     };
     pub use std::process::{Command, ExitStatus};
-
     pub use std::path::{Path, PathBuf};
+    pub use std::ffi::{OsStr, OsString};
 
     // filesystem
     #[cfg(feature = "file-mode")]
