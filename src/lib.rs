@@ -257,6 +257,8 @@ pub mod prelude {
     // Signals
     #[cfg(all(target_family = "unix", feature = "uninterruptible"))]
     pub use uninterruptible::Uninterruptible;
+    #[cfg(all(target_family = "unix", feature = "signal-hook"))]
+    pub use signal_hook::{consts::signal::*, consts::TERM_SIGNALS, iterator::Signals, flag as signal_flag};
 
     // Handy extensions
     pub use boolinator::Boolinator;
