@@ -1,18 +1,40 @@
-use std::{path::PathBuf, fmt::{self, Display}, error::Error};
+use std::{path::{PathBuf, Path}, fmt::{self, Display}, error::Error};
 use directories::{ProjectDirs, BaseDirs, UserDirs};
+use std::sync::Mutex;
 
-pub struct AppInfo {
-    pub name: &'static str,
-    pub author: &'static str,
+struct AppInfo {
+    pub name: String,
+    pub author: String,
 }
 
-//TODO: default to ARGV[0]?
+static APP_INFO: Mutex<Option<AppInfo>> = Mutex::new(None);
 
-//BUG: this will alwyas be "cotton" instead of client package
-pub const APP_INFO: AppInfo = AppInfo {
-    name: env!("CARGO_PKG_NAME"),
-    author: env!("CARGO_PKG_AUTHORS"),
-};
+/// Initializes application name and author with CARGO_PKG_NAME and CARGO_PKG_AUTHORS.
+#[macro_export]
+macro_rules! init_app_info {
+    () => {
+        init_app_info_with(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_AUTHORS"))
+    };
+}
+
+pub use init_app_info;
+
+/// Initializes application name and author with given values.
+pub fn init_app_info_with(name: impl Into<String>, author: impl Into<String>) {
+    let mut app_info = APP_INFO.lock().unwrap();
+    if app_info.is_none() {
+        app_info.replace(AppInfo { name: name.into(), author: author.into() });
+    }
+}
+
+/// Initializes application name and author guessing from environment.
+pub fn init_app_info_guess() {
+    let mut app_info = APP_INFO.lock().unwrap();
+    if app_info.is_none() {
+        let name = std::env::args().next().and_then(|a| Path::new(&a).file_name().and_then(|n| n.to_str().map(ToOwned::to_owned)));
+        app_info.replace(AppInfo { name: name.unwrap_or("cotton".to_owned()), author: "Anonymous".to_owned() });
+    }
+}
 
 #[derive(Debug)]
 pub enum AppDirError {
@@ -35,7 +57,11 @@ impl Error for AppDirError {
 }
 
 pub fn project_dirs() -> Result<ProjectDirs, AppDirError> {
-    ProjectDirs::from("", APP_INFO.author, APP_INFO.name).ok_or(AppDirError::NoProjectDir)
+    init_app_info_guess();
+    let app_info = APP_INFO.lock().unwrap();
+    let app_info = app_info.as_ref().unwrap();
+
+    ProjectDirs::from("", &app_info.author, &app_info.name).ok_or(AppDirError::NoProjectDir)
 }
 
 pub fn base_dirs() -> Result<BaseDirs, AppDirError> {
