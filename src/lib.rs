@@ -39,7 +39,6 @@ standard library imports:
 * [maybe-string](https://docs.rs/maybe-string) - handle probably UTF-8 encoded binary data
 * [boolinator](https://docs.rs/boolinator) - convert [Option] to [bool]
 * [tap](https://docs.rs/tap) - avoid need for `let` bindings
-* [regex](https://docs.rs/regex) - regural expressions
 
 Cotton will also always import large number of commonly used standard library items.
 
@@ -47,6 +46,7 @@ All other dependencies are optional and can be opted-out by disabling default fe
 
 For convenience there are features defined that group several crates together:
 
+* `regex` - regular expressions
 * `args` - parsing of command line arguments
 * `logging` - logging macros and logger
 * `time` - time and date
@@ -57,6 +57,10 @@ For convenience there are features defined that group several crates together:
 * `errors` - flexible error handling and error context
 * `app` - application environment
 * `process` - running programs and handling input/output
+
+Non-default features:
+
+* `backtrace` - enable backtraces for [problem::Problem] errors (also run your program with `RUST_BACKTRACE=1`)
 
 For example you my include `cotton` like this in `Cargo.toml`:
 
@@ -137,6 +141,9 @@ pub use linked_hash_set;
 pub use boolinator;
 pub use tap;
 
+#[cfg(feature = "regex")]
+pub use regex;
+
 // File
 #[cfg(feature = "tempfile")]
 pub use tempfile;
@@ -196,8 +203,6 @@ pub use exec;
 pub use mkargs;
 #[cfg(feature = "cradle")]
 pub use cradle;
-#[cfg(feature = "gag")]
-pub use gag;
 
 // Strings
 #[cfg(feature = "hex")]
@@ -243,6 +248,7 @@ pub mod prelude {
     pub use std::marker::PhantomData;
 
     // Patter matching
+    #[cfg(feature = "regex")]
     pub use regex::{Regex, RegexSet};
 
     // Temporary files
@@ -304,8 +310,6 @@ pub mod prelude {
     pub use mkargs::{mkargs, MkArgs};
     #[cfg(feature = "cradle")]
     pub use cradle::prelude::*;
-    #[cfg(feature = "gag")]
-    pub use gag::Gag;
 
     // Content hashing and crypto
     #[cfg(all(feature = "hex", feature = "digest", feature = "sha2"))]
