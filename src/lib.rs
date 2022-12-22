@@ -11,7 +11,7 @@ struct Cli {
     logging: ArgsLogger,
 
     #[command(flatten)]
-    dry_run: DryRunOpt,
+    dry_run: ArgsDryRun,
 }
 
 fn main() -> FinalResult {
@@ -355,14 +355,14 @@ pub mod prelude {
 
     #[cfg(feature = "clap")]
     #[derive(Debug, Args)]
-    pub struct DryRunOpt {
+    pub struct ArgsDryRun {
         /// Just print what would have been done
         #[arg(long = "dry-run", short = 'd')]
         pub enabled: bool,
     }
 
     #[cfg(all(feature = "clap", feature = "log"))]
-    impl DryRunOpt {
+    impl ArgsDryRun {
         pub fn run(&self, msg: impl Display, run: impl FnOnce() -> ()) -> () {
             if self.enabled {
                 info!("[dry run]: {}", msg);
