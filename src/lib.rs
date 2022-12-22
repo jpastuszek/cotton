@@ -1,4 +1,34 @@
 /*!
+# CLI program template
+
+```
+use cotton::prelude::*;
+
+/// Example script description
+#[derive(Parser)]
+struct Cli {
+    #[command(flatten)]
+    logging: ArgsLogger,
+
+    #[command(flatten)]
+    dry_run: DryRunOpt,
+}
+
+fn main() -> FinalResult {
+    let Cli {
+        logging,
+        dry_run,
+    } = Cli::parse();
+    setup_logger(logging, vec![module_path!()]);
+
+    if !dry_run.enabled {
+        warn!("Hello world!");
+    }
+
+    Ok(())
+}
+```
+
 # Features
 
 A small list of crates are always included in cotton. These are adding some common data types, language usability aids and common
