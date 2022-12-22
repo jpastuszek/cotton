@@ -51,7 +51,7 @@ For convenience there are features defined that group several crates together:
 * `time` - time and date
 * `term` - working with terminal emulators
 * `hashing` - digest calculations and hex encoding
-* `files` - file metadata
+* `files` - file metadata and temporary files
 * `signals` - UNIX signal handling
 * `errors` - flexible error handling and error context
 * `app` - application environment
@@ -137,6 +137,8 @@ pub use boolinator;
 pub use tap;
 
 // File
+#[cfg(feature = "tempfile")]
+pub use tempfile;
 #[cfg(feature = "filetime")]
 pub use filetime;
 #[cfg(all(target_family = "unix", feature = "file-owner"))]
@@ -238,6 +240,10 @@ pub mod prelude {
     // Extra traits and stuff
     pub use std::hash::Hash;
     pub use std::marker::PhantomData;
+
+    // Temporary files
+    #[cfg(feature = "tempfile")]
+    pub use tempfile::{tempdir, tempfile, spooled_tempfile, tempdir_in, tempfile_in};
 
     // Timestamps for files
     #[cfg(feature = "filetime")]

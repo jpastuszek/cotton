@@ -24,7 +24,7 @@ term = ["ansi_term", "atty", "zzz", "term_size"]
 # Hashing
 hashing = ["hex", "sha2", "digest"]
 # Files
-files = ["filetime", "file-mode", "file-owner"]
+files = ["tempfile", "filetime", "file-mode", "file-owner"]
 # UNIX signals
 signals = ["signal-hook", "uninterruptible"]
 # Error handling
@@ -44,6 +44,7 @@ boolinator = "2.4.0"
 tap = "1.0.1"
 clap = { version = "4.0.29", features = ["derive"], optional = true }
 scopeguard = { version = "1.1.0", optional = true }
+tempfile = { version = "3.3.0", optional = true }
 filetime = { version = "0.2.19", optional = true }
 file-mode = { version = "0.1.2", optional = true }
 problem = { version = "5.3.0", optional = true }
