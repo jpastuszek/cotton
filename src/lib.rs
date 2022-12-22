@@ -47,16 +47,43 @@ All other dependencies are optional and can be opted-out by disabling default fe
 For convenience there are features defined that group several crates together:
 
 * `regex` - regular expressions
+  * [regex](https://docs.rs/regex) - An implementation of regular expressions for Rust
 * `args` - parsing of command line arguments
+  * [clap](https://docs.rs/clap) - A simple to use, efficient, and full-featured Command Line Argument Parser
 * `logging` - logging macros and logger
+  * [log](https://docs.rs/log) - A lightweight logging facade for Rust
+  * [stderrlog](https://docs.rs/stderrlog) - Logger that logs to stderr based on verbosity specified
 * `time` - time and date
+  * [chrono](https://docs.rs/chrono) - Date and time library for Rust
 * `term` - working with terminal emulators
+  * [ansi_term](https://docs.rs/ansi_term) - Library for ANSI terminal colours and styles (bold, underline)
+  * [atty](https://docs.rs/atty) - A simple interface for querying atty
+  * [zzz](https://docs.rs/zzz) - Fast progress bar with sane defaults
+  * [term_size](https://docs.rs/term_size) - functions for determining terminal sizes and dimensions
 * `hashing` - digest calculations and hex encoding
+  * [hex](https://docs.rs/hex) - Encoding and decoding data into/from hexadecimal representation
+  * [sha2](https://docs.rs/sha2) - Pure Rust implementation of the SHA-2 hash function family
+  * [digest](https://docs.rs/digest) - Traits for cryptographic hash functions and message authentication codes
 * `files` - file metadata and temporary files
+  * [tempfile](https://docs.rs/tempfile) - A library for managing temporary files and directories
+  * [filetime](https://docs.rs/filetime) - Platform-agnostic accessors of timestamps in File metadata
+  * [file-mode](https://docs.rs/file-mode) - Decode Unix file mode bits, change them and apply them to files
+  * [file-owner](https://docs.rs/file-owner) - Set and get Unix file owner and group
 * `signals` - UNIX signal handling
+  * [signal-hook](https://docs.rs/signal-hook) - Unix signal handling
+  * [uninterruptible](https://docs.rs/uninterruptible) - Guard type that keeps selected Unix signals suppressed
 * `errors` - flexible error handling and error context
+  * [problem](https://docs.rs/problem) - Error handling for command line applications or prototypes
+  * [error-context](https://docs.rs/error-context) - Methods and types that help with adding additional context information to error types
+  * [scopeguard](https://docs.rs/scopeguard) - A RAII scope guard that will run a given closure when it goes out of scope
+  * [assert_matches](https://docs.rs/assert_matches) - Asserts that a value matches a pattern
 * `app` - application environment
+  * [directories](https://docs.rs/directories) - A tiny mid-level library that provides platform-specific standard locations of directories
 * `process` - running programs and handling input/output
+  * [shellwords](https://docs.rs/shellwords) - Manipulate strings according to the word parsing rules of the UNIX Bourne shell
+  * [exec](https://docs.rs/exec) - Use the POSIX exec function to replace the running program with another
+  * [mkargs](https://docs.rs/mkargs) - Build command arguments
+  * [cradle](https://docs.rs/cradle) - Execute child processes with ease
 
 Non-default features:
 
