@@ -1,5 +1,12 @@
 /*!
-# CLI program template
+"Batteries included" prelude with crates, types and functions useful for writing command-line interface tools and quick scripts.
+
+This prelude aims to be useful in generic context of CLI tools and will try to minimise dependencies.
+
+# Basic command-line interface program template
+
+Example starting point for your program that features command line argument parsing with help message, logger setup and
+human-friendly error and panic messages.
 
 ```
 use cotton::prelude::*;
@@ -31,7 +38,7 @@ fn main() -> FinalResult {
 
 # Features
 
-A small list of crates are always included in cotton. These are adding some common data types, language usability aids and common
+A small list of crates is always included in cotton. These are adding some common data types, language usability aids and common
 standard library imports:
 
 * [itertools](https://docs.rs/itertools) - extends standard iterators
@@ -92,7 +99,7 @@ Non-default features:
 For example you my include `cotton` like this in `Cargo.toml`:
 
 ```toml
-cotton = { version = "0.0.22", default-features = false, features = ["errors", "args", "logging", "app", "hashing", "process"] }
+cotton = { version = "0.1.0", default-features = false, features = ["errors", "args", "logging", "app", "hashing", "process"] }
 ```
 
 # Error context
