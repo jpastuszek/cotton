@@ -39,6 +39,7 @@ standard library imports:
 * [maybe-string](https://docs.rs/maybe-string) - handle probably UTF-8 encoded binary data
 * [boolinator](https://docs.rs/boolinator) - convert [Option] to [bool]
 * [tap](https://docs.rs/tap) - avoid need for `let` bindings
+* [regex](https://docs.rs/regex) - regural expressions
 
 Cotton will also always import large number of commonly used standard library items.
 
@@ -240,6 +241,9 @@ pub mod prelude {
     // Extra traits and stuff
     pub use std::hash::Hash;
     pub use std::marker::PhantomData;
+
+    // Patter matching
+    pub use regex::{Regex, RegexSet};
 
     // Temporary files
     #[cfg(feature = "tempfile")]
