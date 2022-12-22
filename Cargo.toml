@@ -13,7 +13,7 @@ license = "MIT"
 
 [features]
 default = ["args", "logging", "time", "term", "hashing", "files", "signals", "errors", "app", "exec", "process"]
-# Paring of arguments
+# Parsing of arguments
 args = ["clap"]
 # Logger and logging
 logging = ["log", "stderrlog"]
